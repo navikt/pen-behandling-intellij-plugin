@@ -1,22 +1,26 @@
 package no.nav.pensjon.pen.plugin.action
 
+import com.intellij.ide.IdeView
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFileFactory
-import com.intellij.psi.PsiManager
 import no.nav.pensjon.pen.plugin.dialog.NewAktivitetDialog
 import no.nav.pensjon.pen.plugin.generator.AktivitetGenerator
 
 class NewAktivitetAction : AnAction() {
 
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
+
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val directory = getTargetDirectory(e) ?: return
+        val ideView = e.getData(LangDataKeys.IDE_VIEW) ?: return
+        val directory = ideView.orChooseDirectory ?: return
 
         val suggestedName = guessBehandlingName(directory)
         val suggestedNumber = guessNextAktivitetNumber(directory)
@@ -52,19 +56,8 @@ class NewAktivitetAction : AnAction() {
     }
 
     override fun update(e: AnActionEvent) {
-        e.presentation.isEnabledAndVisible = e.project != null && getTargetDirectory(e) != null
-    }
-
-    private fun getTargetDirectory(e: AnActionEvent): PsiDirectory? {
-        val psiElement = e.getData(CommonDataKeys.PSI_ELEMENT)
-        if (psiElement is PsiDirectory) return psiElement
-        psiElement?.containingFile?.containingDirectory?.let { return it }
-
-        val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
-        val project = e.project ?: return null
-        val psiManager = PsiManager.getInstance(project)
-        val dir = if (virtualFile.isDirectory) virtualFile else virtualFile.parent ?: return null
-        return psiManager.findDirectory(dir)
+        val ideView = e.getData(LangDataKeys.IDE_VIEW)
+        e.presentation.isEnabledAndVisible = e.project != null && ideView != null && ideView.directories.isNotEmpty()
     }
 
     /**

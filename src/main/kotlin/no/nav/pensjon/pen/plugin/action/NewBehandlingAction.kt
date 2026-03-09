@@ -1,23 +1,27 @@
 package no.nav.pensjon.pen.plugin.action
 
+import com.intellij.ide.IdeView
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFileFactory
-import com.intellij.psi.PsiManager
 import no.nav.pensjon.pen.plugin.dialog.NewBehandlingDialog
 import no.nav.pensjon.pen.plugin.generator.AktivitetGenerator
 import no.nav.pensjon.pen.plugin.generator.BehandlingGenerator
 
 class NewBehandlingAction : AnAction() {
 
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
+
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val directory = getTargetDirectory(e) ?: return
+        val ideView = e.getData(LangDataKeys.IDE_VIEW) ?: return
+        val directory = ideView.orChooseDirectory ?: return
 
         val dialog = NewBehandlingDialog(project)
         if (!dialog.showAndGet()) return
@@ -51,7 +55,6 @@ class NewBehandlingAction : AnAction() {
             )
             directory.add(aktivitetFile)
 
-            // Open the behandling file in editor
             addedBehandling.containingFile?.virtualFile?.let {
                 FileEditorManager.getInstance(project).openFile(it, true)
             }
@@ -59,20 +62,7 @@ class NewBehandlingAction : AnAction() {
     }
 
     override fun update(e: AnActionEvent) {
-        e.presentation.isEnabledAndVisible = e.project != null && getTargetDirectory(e) != null
-    }
-
-    private fun getTargetDirectory(e: AnActionEvent): PsiDirectory? {
-        // Try PSI_ELEMENT first (right-click on directory)
-        val psiElement = e.getData(CommonDataKeys.PSI_ELEMENT)
-        if (psiElement is PsiDirectory) return psiElement
-        psiElement?.containingFile?.containingDirectory?.let { return it }
-
-        // Fall back to VIRTUAL_FILE (right-click on file, editor tab, etc.)
-        val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
-        val project = e.project ?: return null
-        val psiManager = PsiManager.getInstance(project)
-        val dir = if (virtualFile.isDirectory) virtualFile else virtualFile.parent ?: return null
-        return psiManager.findDirectory(dir)
+        val ideView = e.getData(LangDataKeys.IDE_VIEW)
+        e.presentation.isEnabledAndVisible = e.project != null && ideView != null && ideView.directories.isNotEmpty()
     }
 }
