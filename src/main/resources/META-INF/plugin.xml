@@ -1,0 +1,58 @@
+<idea-plugin>
+    <id>no.nav.pensjon.pen.behandling-plugin</id>
+    <name>PEN Behandling Generator</name>
+    <vendor>NAV Pensjon</vendor>
+    <description><![CDATA[
+        Generates boilerplate code for new Behandlinger and Aktiviteter in PEN's behandlingsløsning.
+        <ul>
+            <li>New → PEN Behandling → Behandling: Creates a Behandling class with initial Aktivitet</li>
+            <li>New → PEN Behandling → Aktivitet: Creates an Aktivitet + AktivitetProcessor pair</li>
+            <li>Inspections for naming conventions and missing annotations</li>
+        </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.kotlin</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <localInspection
+                language="kotlin"
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.DiscriminatorValueInspection"
+                displayName="@DiscriminatorValue should not end with 'Behandling'"/>
+        <localInspection
+                language="kotlin"
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingForvalgtAnsvarligTeamInspection"
+                displayName="Behandling subclass missing @ForvalgtAnsvarligTeam"/>
+        <localInspection
+                language="kotlin"
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingComponentInspection"
+                displayName="AktivitetProcessor subclass missing @Component"/>
+    </extensions>
+
+    <actions>
+        <group id="PenBehandling.NewGroup" text="PEN Behandling" popup="true"
+               icon="AllIcons.Nodes.Plugin">
+            <add-to-group group-id="NewGroup" anchor="last"/>
+            <action id="PenBehandling.NewBehandling"
+                    class="no.nav.pensjon.pen.plugin.action.NewBehandlingAction"
+                    text="Behandling"
+                    description="Create a new Behandling with initial Aktivitet"
+                    icon="AllIcons.Nodes.Class"/>
+            <action id="PenBehandling.NewAktivitet"
+                    class="no.nav.pensjon.pen.plugin.action.NewAktivitetAction"
+                    text="Aktivitet"
+                    description="Create a new Aktivitet with AktivitetProcessor"
+                    icon="AllIcons.Nodes.Method"/>
+        </group>
+    </actions>
+</idea-plugin>
