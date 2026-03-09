@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.PsiManager
 import no.nav.pensjon.pen.plugin.dialog.NewAktivitetDialog
 import no.nav.pensjon.pen.plugin.generator.AktivitetGenerator
 
@@ -51,14 +52,19 @@ class NewAktivitetAction : AnAction() {
     }
 
     override fun update(e: AnActionEvent) {
-        val directory = getTargetDirectory(e)
-        e.presentation.isEnabledAndVisible = directory != null && e.project != null
+        e.presentation.isEnabledAndVisible = e.project != null && getTargetDirectory(e) != null
     }
 
     private fun getTargetDirectory(e: AnActionEvent): PsiDirectory? {
         val psiElement = e.getData(CommonDataKeys.PSI_ELEMENT)
-        return psiElement as? PsiDirectory
-            ?: psiElement?.containingFile?.containingDirectory
+        if (psiElement is PsiDirectory) return psiElement
+        psiElement?.containingFile?.containingDirectory?.let { return it }
+
+        val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return null
+        val project = e.project ?: return null
+        val psiManager = PsiManager.getInstance(project)
+        val dir = if (virtualFile.isDirectory) virtualFile else virtualFile.parent ?: return null
+        return psiManager.findDirectory(dir)
     }
 
     /**
