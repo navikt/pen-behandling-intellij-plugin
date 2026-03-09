@@ -17,21 +17,18 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <localInspection
-                language="kotlin"
                 groupName="PEN Behandling"
                 enabledByDefault="true"
                 level="WARNING"
                 implementationClass="no.nav.pensjon.pen.plugin.inspection.DiscriminatorValueInspection"
                 displayName="@DiscriminatorValue should not end with 'Behandling'"/>
         <localInspection
-                language="kotlin"
                 groupName="PEN Behandling"
                 enabledByDefault="true"
                 level="WARNING"
                 implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingForvalgtAnsvarligTeamInspection"
                 displayName="Behandling subclass missing @ForvalgtAnsvarligTeam"/>
         <localInspection
-                language="kotlin"
                 groupName="PEN Behandling"
                 enabledByDefault="true"
                 level="WARNING"

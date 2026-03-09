@@ -1,10 +1,10 @@
 package no.nav.pensjon.pen.plugin.inspection
 
-import com.intellij.codeInspection.LocalInspectionTool
-import com.intellij.codeInspection.ProblemsHolder
-import com.intellij.psi.PsiElementVisitor
-import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.psi.psiUtil.getSuperNames
+import com.intellij.codeInspection.AbstractBaseUastLocalInspectionTool
+import com.intellij.codeInspection.InspectionManager
+import com.intellij.codeInspection.ProblemDescriptor
+import com.intellij.codeInspection.ProblemHighlightType
+import org.jetbrains.uast.UClass
 
 /**
  * Warns when @DiscriminatorValue on a Behandling subclass ends with "Behandling".
@@ -12,30 +12,31 @@ import org.jetbrains.kotlin.psi.psiUtil.getSuperNames
  * Per the PEN conventions, the discriminator value should be the behandling name
  * without the "Behandling" suffix.
  */
-class DiscriminatorValueInspection : LocalInspectionTool() {
+class DiscriminatorValueInspection : AbstractBaseUastLocalInspectionTool() {
 
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
-        return object : KtVisitorVoid() {
-            override fun visitClass(klass: KtClass) {
-                super.visitClass(klass)
+    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
+        if (!isBehandlingSubclass(aClass)) return null
 
-                if (!isBehandlingSubclass(klass)) return
+        val annotation = aClass.uAnnotations.find {
+            it.qualifiedName?.endsWith("DiscriminatorValue") == true
+        } ?: return null
 
-                val discriminatorAnnotation = klass.annotationEntries.firstOrNull { annotation ->
-                    annotation.shortName?.asString() == "DiscriminatorValue"
-                } ?: return
+        val value = annotation.findAttributeValue("value")
+            ?.evaluate() as? String ?: return null
 
-                val value = extractStringArgument(discriminatorAnnotation) ?: return
+        if (!value.endsWith("Behandling")) return null
 
-                if (value.endsWith("Behandling")) {
-                    holder.registerProblem(
-                        discriminatorAnnotation,
-                        "DiscriminatorValue '$value' should not end with 'Behandling'. " +
-                                "Suggested: '${value.removeSuffix("Behandling")}'"
-                    )
-                }
-            }
-        }
+        val psi = annotation.sourcePsi ?: return null
+        return arrayOf(
+            manager.createProblemDescriptor(
+                psi,
+                "DiscriminatorValue '$value' should not end with 'Behandling'. " +
+                        "Suggested: '${value.removeSuffix("Behandling")}'",
+                isOnTheFly,
+                emptyArray(),
+                ProblemHighlightType.WARNING
+            )
+        )
     }
 }
 
@@ -44,30 +45,28 @@ class DiscriminatorValueInspection : LocalInspectionTool() {
  *
  * Every Behandling must declare which team is responsible for it.
  */
-class MissingForvalgtAnsvarligTeamInspection : LocalInspectionTool() {
+class MissingForvalgtAnsvarligTeamInspection : AbstractBaseUastLocalInspectionTool() {
 
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
-        return object : KtVisitorVoid() {
-            override fun visitClass(klass: KtClass) {
-                super.visitClass(klass)
+    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
+        if (!isBehandlingSubclass(aClass)) return null
 
-                if (!isBehandlingSubclass(klass)) return
-
-                val hasAnnotation = klass.annotationEntries.any { annotation ->
-                    annotation.shortName?.asString() == "ForvalgtAnsvarligTeam"
-                }
-
-                if (!hasAnnotation) {
-                    val nameIdentifier = klass.nameIdentifier ?: return
-                    holder.registerProblem(
-                        nameIdentifier,
-                        "Behandling subclass '${klass.name}' is missing @ForvalgtAnsvarligTeam annotation. " +
-                                "Add @ForvalgtAnsvarligTeam(PESYS_FELLES), @ForvalgtAnsvarligTeam(PESYS_ALDER), " +
-                                "or @ForvalgtAnsvarligTeam(PESYS_UFORE)."
-                    )
-                }
-            }
+        val hasAnnotation = aClass.uAnnotations.any {
+            it.qualifiedName?.endsWith("ForvalgtAnsvarligTeam") == true
         }
+        if (hasAnnotation) return null
+
+        val psi = aClass.uastAnchor?.sourcePsi ?: return null
+        return arrayOf(
+            manager.createProblemDescriptor(
+                psi,
+                "Behandling subclass '${aClass.name}' is missing @ForvalgtAnsvarligTeam annotation. " +
+                        "Add @ForvalgtAnsvarligTeam(PESYS_FELLES), @ForvalgtAnsvarligTeam(PESYS_ALDER), " +
+                        "or @ForvalgtAnsvarligTeam(PESYS_UFORE).",
+                isOnTheFly,
+                emptyArray(),
+                ProblemHighlightType.WARNING
+            )
+        )
     }
 }
 
@@ -76,59 +75,41 @@ class MissingForvalgtAnsvarligTeamInspection : LocalInspectionTool() {
  *
  * AktivitetProcessor classes must be Spring components to be auto-discovered.
  */
-class MissingComponentInspection : LocalInspectionTool() {
+class MissingComponentInspection : AbstractBaseUastLocalInspectionTool() {
 
-    override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
-        return object : KtVisitorVoid() {
-            override fun visitClass(klass: KtClass) {
-                super.visitClass(klass)
+    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
+        if (!isAktivitetProcessorSubclass(aClass)) return null
 
-                if (!isAktivitetProcessorSubclass(klass)) return
-
-                val hasComponent = klass.annotationEntries.any { annotation ->
-                    val name = annotation.shortName?.asString()
-                    name == "Component" || name == "Service"
-                }
-
-                if (!hasComponent) {
-                    val nameIdentifier = klass.nameIdentifier ?: return
-                    holder.registerProblem(
-                        nameIdentifier,
-                        "AktivitetProcessor subclass '${klass.name}' is missing @Component annotation. " +
-                                "Add @Component so Spring can discover it."
-                    )
-                }
-            }
+        val hasComponent = aClass.uAnnotations.any {
+            val name = it.qualifiedName
+            name?.endsWith("Component") == true || name?.endsWith("Service") == true
         }
+        if (hasComponent) return null
+
+        val psi = aClass.uastAnchor?.sourcePsi ?: return null
+        return arrayOf(
+            manager.createProblemDescriptor(
+                psi,
+                "AktivitetProcessor subclass '${aClass.name}' is missing @Component annotation. " +
+                        "Add @Component so Spring can discover it.",
+                isOnTheFly,
+                emptyArray(),
+                ProblemHighlightType.WARNING
+            )
+        )
     }
 }
 
-// --- Utility functions ---
+// --- UAST utility functions (K1 and K2 compatible) ---
 
-private fun isBehandlingSubclass(klass: KtClass): Boolean {
-    val superNames = klass.getSuperNames()
-    return superNames.any { it == "Behandling" }
-}
-
-private fun isAktivitetProcessorSubclass(klass: KtClass): Boolean {
-    val superTypeList = klass.superTypeListEntries
-    return superTypeList.any { entry ->
-        val typeRef = entry.typeReference?.text ?: ""
-        typeRef.startsWith("AktivitetProcessor")
+private fun isBehandlingSubclass(aClass: UClass): Boolean {
+    return aClass.uastSuperTypes.any { ref ->
+        ref.type.presentableText == "Behandling"
     }
 }
 
-private fun extractStringArgument(annotation: KtAnnotationEntry): String? {
-    val args = annotation.valueArguments
-    if (args.isEmpty()) return null
-
-    val expr = args.first().getArgumentExpression()
-    if (expr is KtStringTemplateExpression) {
-        val entries = expr.entries
-        if (entries.size == 1 && entries[0] is KtLiteralStringTemplateEntry) {
-            return (entries[0] as KtLiteralStringTemplateEntry).text
-        }
+private fun isAktivitetProcessorSubclass(aClass: UClass): Boolean {
+    return aClass.uastSuperTypes.any { ref ->
+        ref.type.presentableText.startsWith("AktivitetProcessor")
     }
-    // Handle named argument: value = "..."
-    return expr?.text?.removeSurrounding("\"")
 }
