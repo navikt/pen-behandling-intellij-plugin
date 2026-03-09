@@ -1,26 +1,39 @@
-package no.nav.pensjon.pen.plugin.action
+package no.nav.pensjon.pen.plugin.intention
 
-import com.intellij.ide.IdeView
-import com.intellij.openapi.actionSystem.ActionUpdateThread
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.LangDataKeys
+import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileTypes.FileTypeManager
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDirectory
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileFactory
+import no.nav.pensjon.pen.plugin.action.PackageUtil
 import no.nav.pensjon.pen.plugin.dialog.NewAktivitetDialog
 import no.nav.pensjon.pen.plugin.generator.AktivitetGenerator
 
-class NewAktivitetAction : AnAction() {
+/**
+ * Intention action (Alt+Enter) that offers to add a new Aktivitet when the caret
+ * is inside a Behandling class or an existing Aktivitet file.
+ */
+class AddAktivitetIntentionAction : PsiElementBaseIntentionAction() {
 
-    override fun getActionUpdateThread() = ActionUpdateThread.BGT
+    override fun getFamilyName() = "PEN Behandling"
 
-    override fun actionPerformed(e: AnActionEvent) {
-        val project = e.project ?: return
-        val ideView = e.getData(LangDataKeys.IDE_VIEW) ?: return
-        val directory = ideView.orChooseDirectory ?: return
+    override fun getText() = "Add new Aktivitet to this Behandling"
+
+    override fun startInWriteAction() = false
+
+    override fun isAvailable(project: Project, editor: Editor?, element: PsiElement): Boolean {
+        val file = element.containingFile ?: return false
+        val fileName = file.name
+        return fileName.endsWith("Behandling.kt") || fileName.matches(Regex("A\\d{3}_.*\\.kt"))
+    }
+
+    override fun invoke(project: Project, editor: Editor?, element: PsiElement) {
+        val currentFile = element.containingFile ?: return
+        val directory = currentFile.containingDirectory ?: return
 
         val suggestedName = guessBehandlingName(directory)
         val suggestedNumber = guessNextAktivitetNumber(directory)
@@ -55,15 +68,6 @@ class NewAktivitetAction : AnAction() {
         })
     }
 
-    override fun update(e: AnActionEvent) {
-        val ideView = e.getData(LangDataKeys.IDE_VIEW)
-        e.presentation.isEnabledAndVisible = e.project != null && ideView != null && ideView.directories.isNotEmpty()
-    }
-
-    /**
-     * Tries to guess the Behandling name from existing files in the directory.
-     * Looks for files ending in "Behandling.kt".
-     */
     private fun guessBehandlingName(directory: PsiDirectory): String {
         val behandlingFile = directory.files.firstOrNull { file ->
             file.name.endsWith("Behandling.kt")
@@ -73,9 +77,6 @@ class NewAktivitetAction : AnAction() {
             ?: ""
     }
 
-    /**
-     * Suggests the next aktivitet number by looking at existing A\d{3} files.
-     */
     private fun guessNextAktivitetNumber(directory: PsiDirectory): String {
         val existingNumbers = directory.files
             .mapNotNull { file ->

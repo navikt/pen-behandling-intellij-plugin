@@ -6,7 +6,7 @@
         Generates boilerplate code for new Behandlinger and Aktiviteter in PEN's behandlingsløsning.
         <ul>
             <li>New → PEN Behandling → Behandling: Creates a Behandling class with initial Aktivitet</li>
-            <li>New → PEN Behandling → Aktivitet: Creates an Aktivitet + AktivitetProcessor pair</li>
+            <li>Alt+Enter in a Behandling or Aktivitet file → "Add new Aktivitet to this Behandling"</li>
             <li>Inspections for naming conventions and missing annotations</li>
         </ul>
     ]]></description>
@@ -38,6 +38,10 @@
                 level="WARNING"
                 implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingComponentInspection"
                 displayName="AktivitetProcessor subclass missing @Component"/>
+        <intentionAction>
+            <className>no.nav.pensjon.pen.plugin.intention.AddAktivitetIntentionAction</className>
+            <category>PEN Behandling</category>
+        </intentionAction>
     </extensions>
 
     <actions>
@@ -49,11 +53,6 @@
                     text="Behandling"
                     description="Create a new Behandling with initial Aktivitet"
                     icon="AllIcons.Nodes.Class"/>
-            <action id="PenBehandling.NewAktivitet"
-                    class="no.nav.pensjon.pen.plugin.action.NewAktivitetAction"
-                    text="Aktivitet"
-                    description="Create a new Aktivitet with AktivitetProcessor"
-                    icon="AllIcons.Nodes.Method"/>
         </group>
     </actions>
 </idea-plugin>
