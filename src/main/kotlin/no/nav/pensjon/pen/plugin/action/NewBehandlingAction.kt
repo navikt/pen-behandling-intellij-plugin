@@ -1,17 +1,16 @@
 package no.nav.pensjon.pen.plugin.action
 
-import com.intellij.ide.actions.CreateFileFromTemplateDialog
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFileFactory
 import no.nav.pensjon.pen.plugin.dialog.NewBehandlingDialog
 import no.nav.pensjon.pen.plugin.generator.AktivitetGenerator
 import no.nav.pensjon.pen.plugin.generator.BehandlingGenerator
-import org.jetbrains.kotlin.idea.KotlinFileType
 
 class NewBehandlingAction : AnAction() {
 
@@ -24,6 +23,7 @@ class NewBehandlingAction : AnAction() {
 
         val model = dialog.getModel()
         val packageName = PackageUtil.getPackageName(directory)
+        val kotlinFileType = FileTypeManager.getInstance().getFileTypeByExtension("kt")
 
         WriteCommandAction.runWriteCommandAction(project, "Create Behandling", null, {
             val psiFileFactory = PsiFileFactory.getInstance(project)
@@ -31,7 +31,7 @@ class NewBehandlingAction : AnAction() {
             val behandlingContent = BehandlingGenerator.generate(packageName, model)
             val behandlingFile = psiFileFactory.createFileFromText(
                 "${model.name}Behandling.kt",
-                KotlinFileType.INSTANCE,
+                kotlinFileType,
                 behandlingContent
             )
             val addedBehandling = directory.add(behandlingFile)
@@ -45,7 +45,7 @@ class NewBehandlingAction : AnAction() {
             )
             val aktivitetFile = psiFileFactory.createFileFromText(
                 "${model.initialAktivitetNumber}_${model.initialAktivitetDescription}.kt",
-                KotlinFileType.INSTANCE,
+                kotlinFileType,
                 aktivitetContent
             )
             directory.add(aktivitetFile)

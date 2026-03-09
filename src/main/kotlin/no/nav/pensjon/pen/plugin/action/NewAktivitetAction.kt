@@ -5,11 +5,11 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFileFactory
 import no.nav.pensjon.pen.plugin.dialog.NewAktivitetDialog
 import no.nav.pensjon.pen.plugin.generator.AktivitetGenerator
-import org.jetbrains.kotlin.idea.KotlinFileType
 
 class NewAktivitetAction : AnAction() {
 
@@ -25,6 +25,7 @@ class NewAktivitetAction : AnAction() {
 
         val model = dialog.getModel()
         val packageName = PackageUtil.getPackageName(directory)
+        val kotlinFileType = FileTypeManager.getInstance().getFileTypeByExtension("kt")
 
         WriteCommandAction.runWriteCommandAction(project, "Create Aktivitet", null, {
             val psiFileFactory = PsiFileFactory.getInstance(project)
@@ -38,7 +39,7 @@ class NewAktivitetAction : AnAction() {
             )
             val file = psiFileFactory.createFileFromText(
                 "${model.aktivitetNumber}_${model.aktivitetDescription}.kt",
-                KotlinFileType.INSTANCE,
+                kotlinFileType,
                 content
             )
             val added = directory.add(file)
