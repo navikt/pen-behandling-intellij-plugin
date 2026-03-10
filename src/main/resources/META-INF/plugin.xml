@@ -45,14 +45,12 @@
     </extensions>
 
     <actions>
-        <group id="PenBehandling.NewGroup" text="PEN Behandling" popup="true"
-               icon="AllIcons.Nodes.Plugin">
+        <action id="PenBehandling.NewBehandling"
+                class="no.nav.pensjon.pen.plugin.action.NewBehandlingAction"
+                text="PEN Behandling"
+                description="Create a new Behandling with initial Aktivitet"
+                icon="AllIcons.Nodes.Class">
             <add-to-group group-id="NewGroup" anchor="last"/>
-            <action id="PenBehandling.NewBehandling"
-                    class="no.nav.pensjon.pen.plugin.action.NewBehandlingAction"
-                    text="Behandling"
-                    description="Create a new Behandling with initial Aktivitet"
-                    icon="AllIcons.Nodes.Class"/>
-        </group>
+        </action>
     </actions>
 </idea-plugin>
