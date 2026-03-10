@@ -5,405 +5,243 @@ import com.intellij.codeInspection.InspectionManager
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiDirectory
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.toUElementOfType
 
-// ==================== Existing inspections ====================
-
 /**
- * Warns when @DiscriminatorValue on a Behandling subclass ends with "Behandling".
+ * All inspections for Behandling subclasses, consolidated into a single
+ * checkClass() call for performance.
+ *
+ * Checks:
+ * - Missing @Entity (ERROR)
+ * - Missing @DiscriminatorValue (ERROR)
+ * - @DiscriminatorValue does not match convention (WARNING)
+ * - Missing @ForvalgtAnsvarligTeam (WARNING)
  */
-class DiscriminatorValueInspection : AbstractBaseUastLocalInspectionTool() {
+class BehandlingInspection : AbstractBaseUastLocalInspectionTool() {
 
     override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
         if (!isBehandlingSubclass(aClass)) return null
 
-        val annotation = aClass.uAnnotations.find {
-            it.qualifiedName?.endsWith("DiscriminatorValue") == true
-        } ?: return null
+        val problems = mutableListOf<ProblemDescriptor>()
+        val anchor = aClass.uastAnchor?.sourcePsi ?: return null
 
-        val value = annotation.findAttributeValue("value")
-            ?.evaluate() as? String ?: return null
-
-        if (!value.endsWith("Behandling")) return null
-
-        val psi = annotation.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "DiscriminatorValue '$value' should not end with 'Behandling'. " +
-                        "Suggested: '${value.removeSuffix("Behandling")}'",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.WARNING
+        // Missing @Entity
+        if (!hasAnnotation(aClass, "Entity")) {
+            problems += manager.createProblemDescriptor(
+                anchor,
+                "Behandling subclass '${aClass.name}' is missing @Entity. " +
+                        "JPA requires this for single-table inheritance.",
+                isOnTheFly, emptyArray(), ProblemHighlightType.ERROR
             )
-        )
-    }
-}
-
-/**
- * Warns when a Behandling subclass is missing @ForvalgtAnsvarligTeam.
- */
-class MissingForvalgtAnsvarligTeamInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        if (!isBehandlingSubclass(aClass)) return null
-
-        val hasAnnotation = aClass.uAnnotations.any {
-            it.qualifiedName?.endsWith("ForvalgtAnsvarligTeam") == true
         }
-        if (hasAnnotation) return null
 
-        val psi = aClass.uastAnchor?.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "Behandling subclass '${aClass.name}' is missing @ForvalgtAnsvarligTeam annotation. " +
+        // @DiscriminatorValue checks
+        val discAnnotation = findAnnotation(aClass, "DiscriminatorValue")
+        if (discAnnotation == null) {
+            problems += manager.createProblemDescriptor(
+                anchor,
+                "Behandling subclass '${aClass.name}' is missing @DiscriminatorValue. " +
+                        "JPA needs this to identify the subclass in the single-table hierarchy.",
+                isOnTheFly, emptyArray(), ProblemHighlightType.ERROR
+            )
+        } else {
+            val value = discAnnotation.findAttributeValue("value")
+                ?.evaluate() as? String
+            val className = aClass.name
+            if (value != null && className != null) {
+                val expected = className.removeSuffix("Behandling")
+                if (value != expected) {
+                    val psi = discAnnotation.sourcePsi ?: anchor
+                    problems += manager.createProblemDescriptor(
+                        psi,
+                        "DiscriminatorValue '$value' does not match expected '$expected'.",
+                        isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
+                    )
+                }
+            }
+        }
+
+        // Missing @ForvalgtAnsvarligTeam
+        if (!hasAnnotation(aClass, "ForvalgtAnsvarligTeam")) {
+            problems += manager.createProblemDescriptor(
+                anchor,
+                "Behandling subclass '${aClass.name}' is missing @ForvalgtAnsvarligTeam. " +
                         "Add @ForvalgtAnsvarligTeam(PESYS_FELLES), @ForvalgtAnsvarligTeam(PESYS_ALDER), " +
                         "or @ForvalgtAnsvarligTeam(PESYS_UFORE).",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.WARNING
+                isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
             )
-        )
+        }
+
+        return problems.toTypedArray().ifEmpty { null }
     }
 }
 
 /**
- * Warns when an AktivitetProcessor subclass is missing @Component.
+ * All inspections for Aktivitet subclasses, consolidated into a single
+ * checkClass() call for performance.
+ *
+ * Checks:
+ * - Missing @Entity (ERROR)
+ * - Missing @DiscriminatorValue (ERROR)
+ * - @DiscriminatorValue does not match convention (WARNING)
+ * - Class name must end with "Aktivitet" (WARNING)
+ * - Must have a matching AktivitetProcessor in same file (WARNING)
  */
-class MissingComponentInspection : AbstractBaseUastLocalInspectionTool() {
+class AktivitetInspection : AbstractBaseUastLocalInspectionTool() {
+
+    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
+        if (!isAktivitetSubclass(aClass)) return null
+
+        val problems = mutableListOf<ProblemDescriptor>()
+        val anchor = aClass.uastAnchor?.sourcePsi ?: return null
+        val className = aClass.name
+
+        // Missing @Entity
+        if (!hasAnnotation(aClass, "Entity")) {
+            problems += manager.createProblemDescriptor(
+                anchor,
+                "Aktivitet subclass '$className' is missing @Entity. " +
+                        "JPA requires this for single-table inheritance.",
+                isOnTheFly, emptyArray(), ProblemHighlightType.ERROR
+            )
+        }
+
+        // @DiscriminatorValue checks
+        val discAnnotation = findAnnotation(aClass, "DiscriminatorValue")
+        if (discAnnotation == null) {
+            problems += manager.createProblemDescriptor(
+                anchor,
+                "Aktivitet subclass '$className' is missing @DiscriminatorValue. " +
+                        "JPA needs this to identify the subclass in the single-table hierarchy.",
+                isOnTheFly, emptyArray(), ProblemHighlightType.ERROR
+            )
+        } else {
+            val value = discAnnotation.findAttributeValue("value")
+                ?.evaluate() as? String
+            if (value != null && className != null) {
+                val directory = aClass.sourcePsi?.containingFile?.containingDirectory
+                val behandlingName = findBehandlingName(directory)
+                if (behandlingName != null) {
+                    val withoutPrefix = className.removePrefix(behandlingName)
+                    val withoutNumber = withoutPrefix.replace(Regex("^A\\d{3,4}"), "")
+                    val description = withoutNumber.removeSuffix("Aktivitet")
+                    val expected = "${behandlingName}_${description}"
+                    if (value != expected) {
+                        val psi = discAnnotation.sourcePsi ?: anchor
+                        problems += manager.createProblemDescriptor(
+                            psi,
+                            "DiscriminatorValue '$value' does not match expected '$expected'.",
+                            isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
+                        )
+                    }
+                }
+            }
+        }
+
+        // Class name must end with "Aktivitet"
+        if (className != null && !className.endsWith("Aktivitet")) {
+            problems += manager.createProblemDescriptor(
+                anchor,
+                "Aktivitet subclass '$className' should end with 'Aktivitet'. " +
+                        "Suggested: '${className}Aktivitet'",
+                isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
+            )
+        }
+
+        // Must have Processor in same file
+        val uFile = aClass.sourcePsi?.containingFile?.toUElementOfType<UFile>()
+        if (uFile != null) {
+            val hasProcessor = uFile.classes.any { sibling ->
+                sibling !== aClass && isAktivitetProcessorSubclass(sibling)
+            }
+            if (!hasProcessor) {
+                problems += manager.createProblemDescriptor(
+                    anchor,
+                    "Aktivitet '$className' has no AktivitetProcessor in the same file. " +
+                            "By convention, every Aktivitet entity should have a matching Processor.",
+                    isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
+                )
+            }
+        }
+
+        return problems.toTypedArray().ifEmpty { null }
+    }
+}
+
+/**
+ * All inspections for AktivitetProcessor subclasses, consolidated into a single
+ * checkClass() call for performance.
+ *
+ * Checks:
+ * - Missing @Component (WARNING)
+ * - Behandling generic type doesn't match directory's Behandling (WARNING)
+ * - Aktivitet generic type doesn't match Aktivitet in same file (WARNING)
+ */
+class ProcessorInspection : AbstractBaseUastLocalInspectionTool() {
 
     override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
         if (!isAktivitetProcessorSubclass(aClass)) return null
 
+        val problems = mutableListOf<ProblemDescriptor>()
+        val anchor = aClass.uastAnchor?.sourcePsi ?: return null
+
+        // Missing @Component
         val hasComponent = aClass.uAnnotations.any {
             val name = it.qualifiedName
             name?.endsWith("Component") == true || name?.endsWith("Service") == true
         }
-        if (hasComponent) return null
-
-        val psi = aClass.uastAnchor?.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "AktivitetProcessor subclass '${aClass.name}' is missing @Component annotation. " +
+        if (!hasComponent) {
+            problems += manager.createProblemDescriptor(
+                anchor,
+                "AktivitetProcessor subclass '${aClass.name}' is missing @Component. " +
                         "Add @Component so Spring can discover it.",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.WARNING
+                isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
             )
-        )
-    }
-}
-
-// ==================== New inspections ====================
-
-/**
- * Errors when a Behandling subclass is missing @Entity.
- *
- * JPA requires @Entity for single-table inheritance to work. Without it,
- * the class won't be persisted — the compiler won't catch this.
- */
-class MissingEntityOnBehandlingInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        if (!isBehandlingSubclass(aClass)) return null
-        if (hasAnnotation(aClass, "Entity")) return null
-
-        val psi = aClass.uastAnchor?.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "Behandling subclass '${aClass.name}' is missing @Entity. " +
-                        "JPA requires this for single-table inheritance.",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.ERROR
-            )
-        )
-    }
-}
-
-/**
- * Errors when an Aktivitet subclass is missing @Entity.
- */
-class MissingEntityOnAktivitetInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        if (!isAktivitetSubclass(aClass)) return null
-        if (hasAnnotation(aClass, "Entity")) return null
-
-        val psi = aClass.uastAnchor?.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "Aktivitet subclass '${aClass.name}' is missing @Entity. " +
-                        "JPA requires this for single-table inheritance.",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.ERROR
-            )
-        )
-    }
-}
-
-/**
- * Errors when a Behandling subclass is missing @DiscriminatorValue.
- *
- * Without a discriminator value, JPA cannot distinguish this subclass
- * in the single-table inheritance hierarchy.
- */
-class MissingDiscriminatorOnBehandlingInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        if (!isBehandlingSubclass(aClass)) return null
-        if (hasAnnotation(aClass, "DiscriminatorValue")) return null
-
-        val psi = aClass.uastAnchor?.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "Behandling subclass '${aClass.name}' is missing @DiscriminatorValue. " +
-                        "JPA needs this to identify the subclass in the single-table hierarchy.",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.ERROR
-            )
-        )
-    }
-}
-
-/**
- * Errors when an Aktivitet subclass is missing @DiscriminatorValue.
- */
-class MissingDiscriminatorOnAktivitetInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        if (!isAktivitetSubclass(aClass)) return null
-        if (hasAnnotation(aClass, "DiscriminatorValue")) return null
-
-        val psi = aClass.uastAnchor?.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "Aktivitet subclass '${aClass.name}' is missing @DiscriminatorValue. " +
-                        "JPA needs this to identify the subclass in the single-table hierarchy.",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.ERROR
-            )
-        )
-    }
-}
-
-/**
- * Warns when @DiscriminatorValue on an Aktivitet subclass ends with "Aktivitet".
- *
- * Per PEN conventions, discriminator values are semantic names
- * like "FalskId_SjekkOmIdentErFalsk", not suffixed with "Aktivitet".
- */
-class AktivitetDiscriminatorValueInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        if (!isAktivitetSubclass(aClass)) return null
-
-        val annotation = aClass.uAnnotations.find {
-            it.qualifiedName?.endsWith("DiscriminatorValue") == true
-        } ?: return null
-
-        val value = annotation.findAttributeValue("value")
-            ?.evaluate() as? String ?: return null
-
-        if (!value.endsWith("Aktivitet")) return null
-
-        val psi = annotation.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "DiscriminatorValue '$value' should not end with 'Aktivitet'. " +
-                        "Suggested: '${value.removeSuffix("Aktivitet")}'",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.WARNING
-            )
-        )
-    }
-}
-
-/**
- * Warns when an Aktivitet entity class has no matching AktivitetProcessor
- * in the same file.
- *
- * By PEN convention, every Aktivitet entity should have its Processor
- * defined in the same file.
- */
-class AktivitetWithoutProcessorInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        if (!isAktivitetSubclass(aClass)) return null
-
-        val uFile = aClass.sourcePsi?.containingFile?.toUElementOfType<UFile>() ?: return null
-        val hasProcessor = uFile.classes.any { sibling ->
-            sibling !== aClass && isAktivitetProcessorSubclass(sibling)
         }
-        if (hasProcessor) return null
 
-        val psi = aClass.uastAnchor?.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "Aktivitet '${aClass.name}' has no AktivitetProcessor in the same file. " +
-                        "By convention, every Aktivitet entity should have a matching Processor.",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.WARNING
-            )
-        )
-    }
-}
+        // Generic type consistency checks
+        val behandlingTypeName = getProcessorTypeArg(aClass, 0)
+        val aktivitetTypeName = getProcessorTypeArg(aClass, 1)
 
-/**
- * Warns when an Aktivitet subclass name doesn't end with "Aktivitet".
- */
-class AktivitetNamingInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        if (!isAktivitetSubclass(aClass)) return null
-        val name = aClass.name ?: return null
-        if (name.endsWith("Aktivitet")) return null
-
-        val psi = aClass.uastAnchor?.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "Aktivitet subclass '$name' should end with 'Aktivitet'. " +
-                        "Suggested: '${name}Aktivitet'",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.WARNING
-            )
-        )
-    }
-}
-
-/**
- * Checks that @DiscriminatorValue matches the expected value derived from the class name.
- *
- * Behandling convention: class "FooBehandling" → @DiscriminatorValue("Foo")
- * Aktivitet convention:  class "FooA100BarAktivitet" → @DiscriminatorValue("Foo_Bar")
- */
-class DiscriminatorValueCorrectInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        val isBehandling = isBehandlingSubclass(aClass)
-        val isAktivitet = isAktivitetSubclass(aClass)
-        if (!isBehandling && !isAktivitet) return null
-
-        val annotation = aClass.uAnnotations.find {
-            it.qualifiedName?.endsWith("DiscriminatorValue") == true
-        } ?: return null
-
-        val actualValue = annotation.findAttributeValue("value")
-            ?.evaluate() as? String ?: return null
-        val className = aClass.name ?: return null
-
-        val expectedValue = if (isBehandling) {
-            className.removeSuffix("Behandling")
-        } else {
+        // Behandling type must match directory's Behandling
+        if (behandlingTypeName != null) {
             val directory = aClass.sourcePsi?.containingFile?.containingDirectory
-            val behandlingName = directory?.files
+            val expectedBehandling = directory?.files
                 ?.firstOrNull { it.name.endsWith("Behandling.kt") }
-                ?.name?.removeSuffix("Behandling.kt")
-                ?: return null
+                ?.name?.removeSuffix(".kt")
 
-            val withoutPrefix = className.removePrefix(behandlingName)
-            val withoutNumber = withoutPrefix.replace(Regex("^A\\d{3,4}"), "")
-            val description = withoutNumber.removeSuffix("Aktivitet")
-            "${behandlingName}_${description}"
+            if (expectedBehandling != null && behandlingTypeName != expectedBehandling) {
+                problems += manager.createProblemDescriptor(
+                    anchor,
+                    "Processor references '$behandlingTypeName' but the Behandling in this " +
+                            "directory is '$expectedBehandling'.",
+                    isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
+                )
+            }
         }
 
-        if (actualValue == expectedValue) return null
-
-        val psi = annotation.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "DiscriminatorValue '$actualValue' does not match expected '$expectedValue'.",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.WARNING
-            )
-        )
-    }
-}
-
-// ==================== Consistency inspections ====================
-
-/**
- * Warns when an AktivitetProcessor references a Behandling type that doesn't
- * match the Behandling class in the same directory.
- */
-class ProcessorBehandlingMismatchInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        if (!isAktivitetProcessorSubclass(aClass)) return null
-
-        val behandlingTypeName = getProcessorTypeArg(aClass, 0) ?: return null
-
-        val directory = aClass.sourcePsi?.containingFile?.containingDirectory ?: return null
-        val expectedBehandling = directory.files
-            .firstOrNull { it.name.endsWith("Behandling.kt") }
-            ?.name?.removeSuffix(".kt")
-            ?: return null
-
-        if (behandlingTypeName == expectedBehandling) return null
-
-        val psi = aClass.uastAnchor?.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "Processor references '$behandlingTypeName' but the Behandling in this " +
-                        "directory is '$expectedBehandling'.",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.WARNING
-            )
-        )
-    }
-}
-
-/**
- * Warns when an AktivitetProcessor references an Aktivitet type that doesn't
- * exist in the same file.
- *
- * By convention, the Aktivitet entity and its Processor are always in the same file.
- */
-class ProcessorAktivitetMismatchInspection : AbstractBaseUastLocalInspectionTool() {
-
-    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
-        if (!isAktivitetProcessorSubclass(aClass)) return null
-
-        val aktivitetTypeName = getProcessorTypeArg(aClass, 1) ?: return null
-
-        val uFile = aClass.sourcePsi?.containingFile?.toUElementOfType<UFile>() ?: return null
-        val hasMatchingAktivitet = uFile.classes.any { sibling ->
-            sibling !== aClass && sibling.name == aktivitetTypeName
+        // Aktivitet type must exist in same file
+        if (aktivitetTypeName != null) {
+            val uFile = aClass.sourcePsi?.containingFile?.toUElementOfType<UFile>()
+            if (uFile != null) {
+                val hasMatchingAktivitet = uFile.classes.any { sibling ->
+                    sibling !== aClass && sibling.name == aktivitetTypeName
+                }
+                if (!hasMatchingAktivitet) {
+                    problems += manager.createProblemDescriptor(
+                        anchor,
+                        "Processor references '$aktivitetTypeName' but no such Aktivitet class " +
+                                "exists in this file.",
+                        isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
+                    )
+                }
+            }
         }
-        if (hasMatchingAktivitet) return null
 
-        val psi = aClass.uastAnchor?.sourcePsi ?: return null
-        return arrayOf(
-            manager.createProblemDescriptor(
-                psi,
-                "Processor references '$aktivitetTypeName' but no such Aktivitet class " +
-                        "exists in this file.",
-                isOnTheFly,
-                emptyArray(),
-                ProblemHighlightType.WARNING
-            )
-        )
+        return problems.toTypedArray().ifEmpty { null }
     }
 }
 
@@ -435,10 +273,15 @@ private fun hasAnnotation(aClass: UClass, simpleName: String): Boolean {
     }
 }
 
-/**
- * Extracts a generic type argument from an AktivitetProcessor supertype.
- * Index 0 = Behandling type, index 1 = Aktivitet type.
- */
+private fun findAnnotation(aClass: UClass, simpleName: String) =
+    aClass.uAnnotations.find { it.qualifiedName?.endsWith(simpleName) == true }
+
+private fun findBehandlingName(directory: PsiDirectory?): String? {
+    return directory?.files
+        ?.firstOrNull { it.name.endsWith("Behandling.kt") }
+        ?.name?.removeSuffix("Behandling.kt")
+}
+
 private fun getProcessorTypeArg(aClass: UClass, index: Int): String? {
     val superType = aClass.uastSuperTypes.find { ref ->
         val name = ref.type.presentableText

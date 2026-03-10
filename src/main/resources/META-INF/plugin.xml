@@ -24,80 +24,20 @@
                 groupName="PEN Behandling"
                 enabledByDefault="true"
                 level="WARNING"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.DiscriminatorValueInspection"
-                displayName="@DiscriminatorValue should not end with 'Behandling'"/>
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.BehandlingInspection"
+                displayName="Behandling conventions (@Entity, @DiscriminatorValue, @ForvalgtAnsvarligTeam)"/>
         <localInspection
                 groupName="PEN Behandling"
                 enabledByDefault="true"
                 level="WARNING"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingForvalgtAnsvarligTeamInspection"
-                displayName="Behandling subclass missing @ForvalgtAnsvarligTeam"/>
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.AktivitetInspection"
+                displayName="Aktivitet conventions (@Entity, @DiscriminatorValue, naming, Processor)"/>
         <localInspection
                 groupName="PEN Behandling"
                 enabledByDefault="true"
                 level="WARNING"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingComponentInspection"
-                displayName="AktivitetProcessor subclass missing @Component"/>
-        <localInspection
-                groupName="PEN Behandling"
-                enabledByDefault="true"
-                level="ERROR"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingEntityOnBehandlingInspection"
-                displayName="Behandling subclass missing @Entity"/>
-        <localInspection
-                groupName="PEN Behandling"
-                enabledByDefault="true"
-                level="ERROR"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingEntityOnAktivitetInspection"
-                displayName="Aktivitet subclass missing @Entity"/>
-        <localInspection
-                groupName="PEN Behandling"
-                enabledByDefault="true"
-                level="ERROR"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingDiscriminatorOnBehandlingInspection"
-                displayName="Behandling subclass missing @DiscriminatorValue"/>
-        <localInspection
-                groupName="PEN Behandling"
-                enabledByDefault="true"
-                level="ERROR"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingDiscriminatorOnAktivitetInspection"
-                displayName="Aktivitet subclass missing @DiscriminatorValue"/>
-        <localInspection
-                groupName="PEN Behandling"
-                enabledByDefault="true"
-                level="WARNING"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.AktivitetDiscriminatorValueInspection"
-                displayName="@DiscriminatorValue on Aktivitet should not end with 'Aktivitet'"/>
-        <localInspection
-                groupName="PEN Behandling"
-                enabledByDefault="true"
-                level="WARNING"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.AktivitetWithoutProcessorInspection"
-                displayName="Aktivitet entity without AktivitetProcessor in same file"/>
-        <localInspection
-                groupName="PEN Behandling"
-                enabledByDefault="true"
-                level="WARNING"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.ProcessorBehandlingMismatchInspection"
-                displayName="AktivitetProcessor references wrong Behandling type"/>
-        <localInspection
-                groupName="PEN Behandling"
-                enabledByDefault="true"
-                level="WARNING"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.ProcessorAktivitetMismatchInspection"
-                displayName="AktivitetProcessor references Aktivitet not in same file"/>
-        <localInspection
-                groupName="PEN Behandling"
-                enabledByDefault="true"
-                level="WARNING"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.AktivitetNamingInspection"
-                displayName="Aktivitet subclass name should end with 'Aktivitet'"/>
-        <localInspection
-                groupName="PEN Behandling"
-                enabledByDefault="true"
-                level="WARNING"
-                implementationClass="no.nav.pensjon.pen.plugin.inspection.DiscriminatorValueCorrectInspection"
-                displayName="@DiscriminatorValue does not match class name convention"/>
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.ProcessorInspection"
+                displayName="AktivitetProcessor conventions (@Component, type consistency)"/>
         <intentionAction>
             <className>no.nav.pensjon.pen.plugin.intention.AddAktivitetIntentionAction</className>
             <category>PEN Behandling</category>
