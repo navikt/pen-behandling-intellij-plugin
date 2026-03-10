@@ -46,6 +46,14 @@
             <className>no.nav.pensjon.pen.plugin.intention.RenameAktivitetIntentionAction</className>
             <category>PEN Behandling</category>
         </intentionAction>
+        <intentionAction>
+            <className>no.nav.pensjon.pen.plugin.intention.AddInputParameterIntentionAction</className>
+            <category>PEN Behandling</category>
+        </intentionAction>
+        <intentionAction>
+            <className>no.nav.pensjon.pen.plugin.intention.AddOutputParameterIntentionAction</className>
+            <category>PEN Behandling</category>
+        </intentionAction>
     </extensions>
 
     <actions>
