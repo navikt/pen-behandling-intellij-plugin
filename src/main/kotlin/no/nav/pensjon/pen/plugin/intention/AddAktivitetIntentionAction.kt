@@ -76,6 +76,7 @@ class AddAktivitetIntentionAction : PsiElementBaseIntentionAction() {
                 model.aktivitetNumber,
                 model.aktivitetDescription,
                 model.isLastAktivitet,
+                model,
             )
             val newFile = PsiFileFactory.getInstance(project).createFileFromText(
                 "${model.aktivitetNumber}_${model.aktivitetDescription}.kt",

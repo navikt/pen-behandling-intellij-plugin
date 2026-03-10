@@ -6,6 +6,7 @@ data class BehandlingModel(
     val team: String,
     val priority: String,
     val parameters: List<ParameterModel>,
+    val outputParameters: List<ParameterModel>,
     val initialAktivitetNumber: String,
     val initialAktivitetDescription: String,
 )
@@ -20,4 +21,6 @@ data class AktivitetModel(
     val aktivitetNumber: String,
     val aktivitetDescription: String,
     val isLastAktivitet: Boolean,
+    val inputParameters: List<ParameterModel>,
+    val outputParameters: List<ParameterModel>,
 )

@@ -5,14 +5,16 @@ import no.nav.pensjon.pen.plugin.dialog.BehandlingModel
 object BehandlingGenerator {
 
     fun generate(packageName: String, model: BehandlingModel): String {
-        val hasParameters = model.parameters.isNotEmpty()
+        val hasInput = model.parameters.isNotEmpty()
+        val hasOutput = model.outputParameters.isNotEmpty()
         val constructorParams = model.parameters.joinToString(",\n    ") { "${it.name}: ${it.type}" }
         val serializableFields = model.parameters.joinToString(",\n        ") { "val ${it.name}: ${it.type}" }
-        val getters = model.parameters.joinToString("\n\n") { param ->
+        val outputSerializableFields = model.outputParameters.joinToString(",\n        ") { "val ${it.name}: ${it.type}? = null" }
+        val inputGetters = model.parameters.joinToString("\n\n") { param ->
             """    val ${param.name}: ${param.type}
         get() = Json.decodeFromString<Parametere>(input).${param.name}"""
         }
-        val jsonEncode = if (hasParameters) {
+        val jsonEncode = if (hasInput) {
             "Json.encodeToString(Parametere(${model.parameters.joinToString(", ") { it.name }}))"
         } else {
             """"{}""""
@@ -25,7 +27,7 @@ object BehandlingGenerator {
             appendLine("import jakarta.persistence.Column")
             appendLine("import jakarta.persistence.DiscriminatorValue")
             appendLine("import jakarta.persistence.Entity")
-            if (hasParameters) {
+            if (hasInput || hasOutput) {
                 appendLine("import jakarta.persistence.Lob")
                 appendLine("import kotlinx.serialization.Serializable")
                 appendLine("import kotlinx.serialization.encodeToString")
@@ -41,7 +43,7 @@ object BehandlingGenerator {
             appendLine("@DiscriminatorValue(value = \"${model.discriminatorValue}\")")
             appendLine("@ForvalgtAnsvarligTeam(${model.team})")
 
-            if (hasParameters) {
+            if (hasInput) {
                 appendLine("class ${model.name}Behandling(")
                 appendLine("    $constructorParams")
                 appendLine(") : Behandling(prioritet = Prioritet.${model.priority}) {")
@@ -50,18 +52,41 @@ object BehandlingGenerator {
                 appendLine("    @Column(name = \"INPUT\")")
                 appendLine("    private var input: String = $jsonEncode")
                 appendLine()
-                appendLine(getters)
+                appendLine(inputGetters)
+            } else {
+                appendLine("class ${model.name}Behandling : Behandling(prioritet = Prioritet.${model.priority}) {")
+            }
+
+            if (hasOutput) {
                 appendLine()
-                appendLine("    override fun opprettInitiellAktivitet(): Aktivitet = $initialAktivitetClass()")
+                appendLine("    @Lob")
+                appendLine("    @Column(name = \"OUTPUT\")")
+                appendLine("    private var output: String? = null")
+                appendLine()
+                appendLine("    fun getOutput(): Output = Json.decodeFromString(output!!)")
+                appendLine()
+                appendLine("    fun saveOutput(output: Output) {")
+                appendLine("        this.output = Json.encodeToString(output)")
+                appendLine("    }")
+            }
+
+            appendLine()
+            appendLine("    override fun opprettInitiellAktivitet(): Aktivitet = $initialAktivitetClass()")
+
+            if (hasInput) {
                 appendLine()
                 appendLine("    @Serializable")
                 appendLine("    data class Parametere(")
                 appendLine("        $serializableFields")
                 appendLine("    )")
-            } else {
-                appendLine("class ${model.name}Behandling : Behandling(prioritet = Prioritet.${model.priority}) {")
+            }
+
+            if (hasOutput) {
                 appendLine()
-                appendLine("    override fun opprettInitiellAktivitet(): Aktivitet = $initialAktivitetClass()")
+                appendLine("    @Serializable")
+                appendLine("    data class Output(")
+                appendLine("        $outputSerializableFields")
+                appendLine("    )")
             }
 
             appendLine("}")

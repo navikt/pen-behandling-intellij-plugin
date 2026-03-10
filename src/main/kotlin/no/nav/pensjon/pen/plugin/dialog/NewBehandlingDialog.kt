@@ -31,6 +31,9 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
     private val parameterRows = mutableListOf<ParameterRow>()
     private lateinit var parametersContainer: JPanel
 
+    private val outputParameterRows = mutableListOf<ParameterRow>()
+    private lateinit var outputParametersContainer: JPanel
+
     init {
         title = "Ny Behandling"
         setSize(550, 550)
@@ -78,20 +81,25 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
         }
 
-        val parametersSection = JPanel(BorderLayout()).apply {
-            border = BorderFactory.createTitledBorder("Input-parametere")
+        val parametersSection = createParameterSection(
+            "Input-parametere",
+            "Legg til input-parameter",
+            "Parametere serialiseres som JSON i INPUT-kolonnen",
+            parameterRows,
+            parametersContainer,
+        )
 
-            val headerPanel = JPanel(FlowLayout(FlowLayout.LEFT)).apply {
-                add(JButton("Legg til parameter").apply {
-                    addActionListener { addParameterRow() }
-                })
-                add(JBLabel("Parametere serialiseres som JSON i INPUT-kolonnen").apply {
-                    foreground = java.awt.Color.GRAY
-                })
-            }
-            add(headerPanel, BorderLayout.NORTH)
-            add(parametersContainer, BorderLayout.CENTER)
+        outputParametersContainer = JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
         }
+
+        val outputParametersSection = createParameterSection(
+            "Output-parametere",
+            "Legg til output-parameter",
+            "Parametere serialiseres som JSON i OUTPUT-kolonnen",
+            outputParameterRows,
+            outputParametersContainer,
+        )
 
         val bottomPanel = panel {
             separator()
@@ -107,6 +115,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         val verticalBox = Box.createVerticalBox().apply {
             add(topPanel)
             add(parametersSection)
+            add(outputParametersSection)
             add(bottomPanel)
             add(Box.createVerticalGlue())
         }
@@ -114,7 +123,28 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         return mainPanel
     }
 
-    private fun addParameterRow() {
+    private fun createParameterSection(
+        title: String,
+        buttonText: String,
+        description: String,
+        rows: MutableList<ParameterRow>,
+        container: JPanel,
+    ): JPanel = JPanel(BorderLayout()).apply {
+        border = BorderFactory.createTitledBorder(title)
+
+        val headerPanel = JPanel(FlowLayout(FlowLayout.LEFT)).apply {
+            add(JButton(buttonText).apply {
+                addActionListener { addParameterRow(rows, container) }
+            })
+            add(JBLabel(description).apply {
+                foreground = java.awt.Color.GRAY
+            })
+        }
+        add(headerPanel, BorderLayout.NORTH)
+        add(container, BorderLayout.CENTER)
+    }
+
+    private fun addParameterRow(rows: MutableList<ParameterRow> = parameterRows, container: JPanel = parametersContainer) {
         val nameField = JBTextField()
         val typeField = JBTextField()
 
@@ -137,20 +167,20 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
 
         val removeButton = JButton("✕").apply {
             addActionListener {
-                parameterRows.remove(row)
-                parametersContainer.remove(rowPanel)
-                parametersContainer.revalidate()
-                parametersContainer.repaint()
+                rows.remove(row)
+                container.remove(rowPanel)
+                container.revalidate()
+                container.repaint()
                 pack()
             }
         }
         gbc.gridx = 4; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0.0
         rowPanel.add(removeButton, gbc)
 
-        parameterRows.add(row)
-        parametersContainer.add(rowPanel)
-        parametersContainer.revalidate()
-        parametersContainer.repaint()
+        rows.add(row)
+        container.add(rowPanel)
+        container.revalidate()
+        container.repaint()
         pack()
     }
 
@@ -191,6 +221,9 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         team = selectedTeam,
         priority = selectedPriority,
         parameters = parameterRows.map { row ->
+            ParameterModel(row.nameField.text.trim(), row.typeField.text.trim())
+        }.filter { it.name.isNotEmpty() && it.type.isNotEmpty() },
+        outputParameters = outputParameterRows.map { row ->
             ParameterModel(row.nameField.text.trim(), row.typeField.text.trim())
         }.filter { it.name.isNotEmpty() && it.type.isNotEmpty() },
         initialAktivitetNumber = "A101",

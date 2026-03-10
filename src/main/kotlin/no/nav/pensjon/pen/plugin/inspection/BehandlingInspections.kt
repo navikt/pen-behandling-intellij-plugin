@@ -4,6 +4,7 @@ import com.intellij.codeInspection.AbstractBaseUastLocalInspectionTool
 import com.intellij.codeInspection.InspectionManager
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemHighlightType
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiDirectory
 import org.jetbrains.uast.UClass
@@ -73,6 +74,20 @@ class BehandlingInspection : AbstractBaseUastLocalInspectionTool() {
                         "or @ForvalgtAnsvarligTeam(PESYS_UFORE).",
                 isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
             )
+        }
+
+        // Check that inner Input/Output data classes have @Serializable
+        for (innerClass in aClass.innerClasses) {
+            val innerName = innerClass.name ?: continue
+            if ((innerName == "Parametere" || innerName == "Parameter" || innerName == "Output")
+                && !hasPsiAnnotation(innerClass, "Serializable")) {
+                val innerAnchor = innerClass.nameIdentifier ?: anchor
+                problems += manager.createProblemDescriptor(
+                    innerAnchor,
+                    "Data class '$innerName' bør ha @Serializable for JSON-serialisering.",
+                    isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
+                )
+            }
         }
 
         return problems.toTypedArray().ifEmpty { null }
@@ -162,6 +177,20 @@ class AktivitetInspection : AbstractBaseUastLocalInspectionTool() {
                     anchor,
                     "Aktivitet '$className' has no AktivitetProcessor in the same file. " +
                             "By convention, every Aktivitet entity should have a matching Processor.",
+                    isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
+                )
+            }
+        }
+
+        // Check that inner Input/Output data classes have @Serializable
+        for (innerClass in aClass.innerClasses) {
+            val innerName = innerClass.name ?: continue
+            if ((innerName == "Input" || innerName == "Parameter" || innerName == "Output")
+                && !hasPsiAnnotation(innerClass, "Serializable")) {
+                val innerAnchor = innerClass.nameIdentifier ?: anchor
+                problems += manager.createProblemDescriptor(
+                    innerAnchor,
+                    "Data class '$innerName' bør ha @Serializable for JSON-serialisering.",
                     isOnTheFly, emptyArray(), ProblemHighlightType.WARNING
                 )
             }
@@ -275,6 +304,12 @@ private fun hasAnnotation(aClass: UClass, simpleName: String): Boolean {
 
 private fun findAnnotation(aClass: UClass, simpleName: String) =
     aClass.uAnnotations.find { it.qualifiedName?.endsWith(simpleName) == true }
+
+private fun hasPsiAnnotation(psiClass: PsiClass, simpleName: String): Boolean {
+    return psiClass.annotations.any {
+        it.qualifiedName?.endsWith(simpleName) == true
+    }
+}
 
 private fun findBehandlingName(directory: PsiDirectory?): String? {
     return directory?.files
