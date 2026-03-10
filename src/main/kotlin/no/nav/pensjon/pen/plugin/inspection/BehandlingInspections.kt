@@ -288,6 +288,57 @@ class AktivitetNamingInspection : AbstractBaseUastLocalInspectionTool() {
     }
 }
 
+/**
+ * Checks that @DiscriminatorValue matches the expected value derived from the class name.
+ *
+ * Behandling convention: class "FooBehandling" → @DiscriminatorValue("Foo")
+ * Aktivitet convention:  class "FooA100BarAktivitet" → @DiscriminatorValue("Foo_Bar")
+ */
+class DiscriminatorValueCorrectInspection : AbstractBaseUastLocalInspectionTool() {
+
+    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
+        val isBehandling = isBehandlingSubclass(aClass)
+        val isAktivitet = isAktivitetSubclass(aClass)
+        if (!isBehandling && !isAktivitet) return null
+
+        val annotation = aClass.uAnnotations.find {
+            it.qualifiedName?.endsWith("DiscriminatorValue") == true
+        } ?: return null
+
+        val actualValue = annotation.findAttributeValue("value")
+            ?.evaluate() as? String ?: return null
+        val className = aClass.name ?: return null
+
+        val expectedValue = if (isBehandling) {
+            className.removeSuffix("Behandling")
+        } else {
+            val directory = aClass.sourcePsi?.containingFile?.containingDirectory
+            val behandlingName = directory?.files
+                ?.firstOrNull { it.name.endsWith("Behandling.kt") }
+                ?.name?.removeSuffix("Behandling.kt")
+                ?: return null
+
+            val withoutPrefix = className.removePrefix(behandlingName)
+            val withoutNumber = withoutPrefix.replace(Regex("^A\\d{3,4}"), "")
+            val description = withoutNumber.removeSuffix("Aktivitet")
+            "${behandlingName}_${description}"
+        }
+
+        if (actualValue == expectedValue) return null
+
+        val psi = annotation.sourcePsi ?: return null
+        return arrayOf(
+            manager.createProblemDescriptor(
+                psi,
+                "DiscriminatorValue '$actualValue' does not match expected '$expectedValue'.",
+                isOnTheFly,
+                emptyArray(),
+                ProblemHighlightType.WARNING
+            )
+        )
+    }
+}
+
 // ==================== Consistency inspections ====================
 
 /**

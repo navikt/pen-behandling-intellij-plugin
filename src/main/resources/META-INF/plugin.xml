@@ -92,6 +92,12 @@
                 level="WARNING"
                 implementationClass="no.nav.pensjon.pen.plugin.inspection.AktivitetNamingInspection"
                 displayName="Aktivitet subclass name should end with 'Aktivitet'"/>
+        <localInspection
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.DiscriminatorValueCorrectInspection"
+                displayName="@DiscriminatorValue does not match class name convention"/>
         <intentionAction>
             <className>no.nav.pensjon.pen.plugin.intention.AddAktivitetIntentionAction</className>
             <category>PEN Behandling</category>
