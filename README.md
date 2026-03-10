@@ -26,6 +26,8 @@ Dialogen lar deg velge:
 - **Team** — Ansvarlig team (`PESYS_FELLES`, `PESYS_ALDER`, `PESYS_UFORE`)
 - **Prioritet** — `ONLINE`, `ONLINE_BATCH` eller `BATCH`
 - **Input-parametere** — Parametre som serialiseres til JSON i `INPUT`-kolonnen
+- **Output-parametere** — Parametre som serialiseres til JSON i `OUTPUT`-kolonnen
+- **RequestContextUserId** — Valgfri overstyring av `getRequestContextUserId()`
 - **Initiell aktivitet** — Beskrivelse for første aktivitet
 
 ![ny_behandling_dialog.png](docs/images/ny_behandling_dialog.png)
@@ -54,6 +56,22 @@ Nummereringen håndteres automatisk. Hvis du setter inn en aktivitet midt i flyt
 ![rename_aktivitet.png](docs/images/rename_aktivitet.png)
 
 ![rename_aktivitet_dialog.png](docs/images/rename_aktivitet_dialog.png)
+
+### Legg til input/output-parameter (Alt+Enter)
+
+I en eksisterende Behandling- eller Aktivitet-fil: **Alt+Enter** → *"Legg til input-parameter"* eller *"Legg til output-parameter"*.
+
+- Legger til felt i data class (`Parametere`/`Input`/`Output`)
+- Oppretter getter-property
+- Oppdaterer konstruktør og `Json.encodeToString`-kall (input)
+- Oppdaterer `setOutput()`-signatur og `Output()`-kall (Aktivitet output)
+- Dersom det ikke finnes input/output fra før, opprettes hele blokken med `@Lob`, `@Column`, data class osv.
+
+### Legg til getRequestContextUserId (Alt+Enter)
+
+I en Behandling-fil uten eksisterende override: **Alt+Enter** → *"Legg til getRequestContextUserId()"*.
+
+Setter inn `override fun getRequestContextUserId(): String = "..."` med angitt verdi.
 
 ### Inspeksjoner
 
@@ -96,4 +114,6 @@ Plugin-filen havner i `build/distributions/`.
 1. **Ny behandling**: Høyreklikk på en mappe → **New → PEN Behandling** → fyll inn skjemaet
 2. **Ny aktivitet**: Åpne en behandlings- eller aktivitetsfil → **Alt+Enter** → *"Add new Aktivitet to this Behandling"*
 3. **Gi nytt navn**: Åpne en aktivitetsfil → **Alt+Enter** → *"Rename Aktivitet (PEN conventions)"*
-4. **Inspeksjoner**: Aktiveres automatisk i alle Kotlin-filer med Behandling/Aktivitet/Processor-klasser
+4. **Legg til input/output**: Åpne en behandlings- eller aktivitetsfil → **Alt+Enter** → *"Legg til input-parameter"* / *"Legg til output-parameter"*
+5. **Legg til getRequestContextUserId**: Åpne en behandlingsfil → **Alt+Enter** → *"Legg til getRequestContextUserId()"*
+6. **Inspeksjoner**: Aktiveres automatisk i alle Kotlin-filer med Behandling/Aktivitet/Processor-klasser
