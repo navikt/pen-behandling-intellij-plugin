@@ -10,12 +10,16 @@ Oppretter en komplett behandling med:
 - `{Navn}Behandling.kt` — Behandlingsklassen med riktige annotasjoner (`@Entity`, `@DiscriminatorValue`, `@ForvalgtAnsvarligTeam`)
 - `A{nr}_{Beskrivelse}.kt` — Initiell aktivitet med `Aktivitet`-entity og `AktivitetProcessor`
 
+![ny_behandling.png](docs/images/ny_behandling.png)
+
 Dialogen lar deg velge:
 - **Navn** — Navnet på behandlingen (uten "Behandling"-suffiks)
 - **Team** — Ansvarlig team (`PESYS_FELLES`, `PESYS_ALDER`, `PESYS_UFORE`)
 - **Prioritet** — `ONLINE`, `ONLINE_BATCH` eller `BATCH`
 - **Input-parametere** — Parametre som serialiseres til JSON i `INPUT`-kolonnen
 - **Initiell aktivitet** — Beskrivelse for første aktivitet
+- 
+![ny_behandling_dialog.png](docs/images/ny_behandling_dialog.png)
 
 ### Ny Aktivitet (Alt+Enter i en Behandling- eller Aktivitet-fil)
 
@@ -23,6 +27,10 @@ Legg til en ny aktivitet direkte fra koden med **Alt+Enter** → *"Add new Aktiv
 
 - **Fra en `*Behandling.kt`-fil**: Ny aktivitet legges til etter den høyeste eksisterende
 - **Fra en `A###_*.kt`-fil**: Ny aktivitet settes inn rett etter den nåværende
+
+![ny_aktivitet.png](docs/images/ny_aktivitet.png)
+
+![ny_aktivitet_dialog.png](docs/images/ny_aktivitet_dialog.png)
 
 Nummereringen håndteres automatisk. Hvis du setter inn en aktivitet midt i flyten, renummereres alle etterfølgende aktiviteter automatisk (filnavn og klassenavn oppdateres i alle filer i mappen).
 
@@ -33,6 +41,10 @@ Nummereringen håndteres automatisk. Hvis du setter inn en aktivitet midt i flyt
 - Klassenavn (entity og processor)
 - Diskriminatorverdi
 - Alle referanser i filer i samme mappe
+
+![rename_aktivitet.png](docs/images/rename_aktivitet.png)
+
+![rename_aktivitet_dialog.png](docs/images/rename_aktivitet_dialog.png)
 
 ### Inspeksjoner
 
