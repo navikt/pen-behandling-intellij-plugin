@@ -264,6 +264,30 @@ class AktivitetWithoutProcessorInspection : AbstractBaseUastLocalInspectionTool(
     }
 }
 
+/**
+ * Warns when an Aktivitet subclass name doesn't end with "Aktivitet".
+ */
+class AktivitetNamingInspection : AbstractBaseUastLocalInspectionTool() {
+
+    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
+        if (!isAktivitetSubclass(aClass)) return null
+        val name = aClass.name ?: return null
+        if (name.endsWith("Aktivitet")) return null
+
+        val psi = aClass.uastAnchor?.sourcePsi ?: return null
+        return arrayOf(
+            manager.createProblemDescriptor(
+                psi,
+                "Aktivitet subclass '$name' should end with 'Aktivitet'. " +
+                        "Suggested: '${name}Aktivitet'",
+                isOnTheFly,
+                emptyArray(),
+                ProblemHighlightType.WARNING
+            )
+        )
+    }
+}
+
 // ==================== Consistency inspections ====================
 
 /**

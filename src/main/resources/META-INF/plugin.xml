@@ -86,6 +86,12 @@
                 level="WARNING"
                 implementationClass="no.nav.pensjon.pen.plugin.inspection.ProcessorAktivitetMismatchInspection"
                 displayName="AktivitetProcessor references Aktivitet not in same file"/>
+        <localInspection
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.AktivitetNamingInspection"
+                displayName="Aktivitet subclass name should end with 'Aktivitet'"/>
         <intentionAction>
             <className>no.nav.pensjon.pen.plugin.intention.AddAktivitetIntentionAction</className>
             <category>PEN Behandling</category>
