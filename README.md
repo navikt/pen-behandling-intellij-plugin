@@ -1,5 +1,7 @@
 # PEN Behandling IntelliJ Plugin
 
+[![Build](https://github.com/navikt/pen-behandling-intellij-plugin/actions/workflows/build.yml/badge.svg)](https://github.com/navikt/pen-behandling-intellij-plugin/actions/workflows/build.yml)
+
 IntelliJ-plugin som gjør det enklere å opprette nye behandlinger og aktiviteter i PEN's behandlingsløsning.
 
 ## Funksjoner
