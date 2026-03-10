@@ -48,8 +48,10 @@ object ParameterCodeModifier {
 
         var result = text
         if (hasExisting) {
+            result = addConstructorParameter(result, paramName, paramType)
             result = addFieldToDataClass(result, dataClassName, paramName, paramType, isOutput = false)
             result = addGetterBeforeDataClass(result, dataClassName, paramName, paramType, isOutput = false)
+            result = addToJsonEncodeCall(result, dataClassName, paramName)
         } else {
             result = addNewInputBlock(result, dataClassName, paramName, paramType)
             result = addImportsIfMissing(result, INPUT_IMPORTS)
@@ -137,7 +139,10 @@ object ParameterCodeModifier {
     }
 
     /**
-     * Creates a complete input block from scratch and inserts before the closing '}'.
+     * Creates a complete input block from scratch:
+     * - Adds constructor parameter to the class
+     * - Adds @Lob @Column field initialized with Json.encodeToString
+     * - Adds getter and @Serializable data class
      */
     private fun addNewInputBlock(
         text: String,
@@ -145,13 +150,15 @@ object ParameterCodeModifier {
         paramName: String,
         paramType: String,
     ): String {
-        val insertPos = findClassBodyEnd(text) ?: return text
+        var result = addConstructorParameter(text, paramName, paramType)
+
+        val insertPos = findClassBodyEnd(result) ?: return result
 
         val block = buildString {
             appendLine()
             appendLine("    @Lob")
             appendLine("    @Column(name = \"INPUT\")")
-            appendLine("    private var input: String = \"{}\" // TODO: Initialiser med Json.encodeToString($dataClassName(...))")
+            appendLine("    private var input: String = Json.encodeToString($dataClassName($paramName))")
             appendLine()
             appendLine("    val $paramName: $paramType")
             appendLine("        get() = Json.decodeFromString<$dataClassName>(input).$paramName")
@@ -162,7 +169,7 @@ object ParameterCodeModifier {
             appendLine("    )")
         }
 
-        return text.substring(0, insertPos) + block + text.substring(insertPos)
+        return result.substring(0, insertPos) + block + result.substring(insertPos)
     }
 
     /**
@@ -260,5 +267,60 @@ object ParameterCodeModifier {
             pos++
         }
         return if (depth == 0) pos - 1 else null
+    }
+
+    /**
+     * Adds a constructor parameter to the first class declaration.
+     * Handles both "class Foo : Super" (no constructor) and "class Foo(\n    existing: Type\n) : Super".
+     */
+    private fun addConstructorParameter(text: String, paramName: String, paramType: String): String {
+        // Find the first class declaration
+        val classMatch = Regex("""class (\w+)""").find(text) ?: return text
+        val afterClassName = classMatch.range.last + 1
+
+        // Check if there's already a constructor (opening paren right after class name)
+        val afterName = text.substring(afterClassName)
+        return if (afterName.startsWith("(")) {
+            // Existing constructor — find the closing ')' and add before it
+            val openParen = afterClassName
+            val closeParen = findMatchingParen(text, openParen) ?: return text
+            val existingParams = text.substring(openParen + 1, closeParen).trim()
+
+            if (existingParams.isEmpty()) {
+                // Empty constructor: class Foo() → class Foo(\n    paramName: Type\n)
+                text.substring(0, openParen + 1) +
+                        "\n    $paramName: $paramType\n" +
+                        text.substring(closeParen)
+            } else {
+                // Has params: add after last one
+                text.substring(0, closeParen) +
+                        ",\n    $paramName: $paramType" +
+                        text.substring(closeParen)
+            }
+        } else {
+            // No constructor — add one: class Foo : → class Foo(\n    paramName: Type\n) :
+            text.substring(0, afterClassName) +
+                    "(\n    $paramName: $paramType\n)" +
+                    text.substring(afterClassName)
+        }
+    }
+
+    /**
+     * Adds a parameter name to an existing Json.encodeToString(DataClass(...)) call.
+     */
+    private fun addToJsonEncodeCall(text: String, dataClassName: String, paramName: String): String {
+        val pattern = "Json.encodeToString($dataClassName("
+        val idx = text.indexOf(pattern)
+        if (idx == -1) return text
+
+        val argsStart = idx + pattern.length
+        val closeParen = findMatchingParen(text, argsStart - 1) ?: return text
+        val existingArgs = text.substring(argsStart, closeParen).trim()
+
+        return if (existingArgs.isEmpty()) {
+            text.substring(0, argsStart) + paramName + text.substring(closeParen)
+        } else {
+            text.substring(0, closeParen) + ", $paramName" + text.substring(closeParen)
+        }
     }
 }
