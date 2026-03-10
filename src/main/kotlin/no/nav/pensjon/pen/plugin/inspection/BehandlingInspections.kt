@@ -4,6 +4,7 @@ import com.intellij.codeInspection.AbstractBaseUastLocalInspectionTool
 import com.intellij.codeInspection.InspectionManager
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.ProblemHighlightType
+import com.intellij.psi.PsiClassType
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.toUElementOfType
@@ -263,6 +264,74 @@ class AktivitetWithoutProcessorInspection : AbstractBaseUastLocalInspectionTool(
     }
 }
 
+// ==================== Consistency inspections ====================
+
+/**
+ * Warns when an AktivitetProcessor references a Behandling type that doesn't
+ * match the Behandling class in the same directory.
+ */
+class ProcessorBehandlingMismatchInspection : AbstractBaseUastLocalInspectionTool() {
+
+    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
+        if (!isAktivitetProcessorSubclass(aClass)) return null
+
+        val behandlingTypeName = getProcessorTypeArg(aClass, 0) ?: return null
+
+        val directory = aClass.sourcePsi?.containingFile?.containingDirectory ?: return null
+        val expectedBehandling = directory.files
+            .firstOrNull { it.name.endsWith("Behandling.kt") }
+            ?.name?.removeSuffix(".kt")
+            ?: return null
+
+        if (behandlingTypeName == expectedBehandling) return null
+
+        val psi = aClass.uastAnchor?.sourcePsi ?: return null
+        return arrayOf(
+            manager.createProblemDescriptor(
+                psi,
+                "Processor references '$behandlingTypeName' but the Behandling in this " +
+                        "directory is '$expectedBehandling'.",
+                isOnTheFly,
+                emptyArray(),
+                ProblemHighlightType.WARNING
+            )
+        )
+    }
+}
+
+/**
+ * Warns when an AktivitetProcessor references an Aktivitet type that doesn't
+ * exist in the same file.
+ *
+ * By convention, the Aktivitet entity and its Processor are always in the same file.
+ */
+class ProcessorAktivitetMismatchInspection : AbstractBaseUastLocalInspectionTool() {
+
+    override fun checkClass(aClass: UClass, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor>? {
+        if (!isAktivitetProcessorSubclass(aClass)) return null
+
+        val aktivitetTypeName = getProcessorTypeArg(aClass, 1) ?: return null
+
+        val uFile = aClass.sourcePsi?.containingFile?.toUElementOfType<UFile>() ?: return null
+        val hasMatchingAktivitet = uFile.classes.any { sibling ->
+            sibling !== aClass && sibling.name == aktivitetTypeName
+        }
+        if (hasMatchingAktivitet) return null
+
+        val psi = aClass.uastAnchor?.sourcePsi ?: return null
+        return arrayOf(
+            manager.createProblemDescriptor(
+                psi,
+                "Processor references '$aktivitetTypeName' but no such Aktivitet class " +
+                        "exists in this file.",
+                isOnTheFly,
+                emptyArray(),
+                ProblemHighlightType.WARNING
+            )
+        )
+    }
+}
+
 // ==================== UAST utility functions (K1 and K2 compatible) ====================
 
 private fun isBehandlingSubclass(aClass: UClass): Boolean {
@@ -289,4 +358,18 @@ private fun hasAnnotation(aClass: UClass, simpleName: String): Boolean {
     return aClass.uAnnotations.any {
         it.qualifiedName?.endsWith(simpleName) == true
     }
+}
+
+/**
+ * Extracts a generic type argument from an AktivitetProcessor supertype.
+ * Index 0 = Behandling type, index 1 = Aktivitet type.
+ */
+private fun getProcessorTypeArg(aClass: UClass, index: Int): String? {
+    val superType = aClass.uastSuperTypes.find { ref ->
+        val name = ref.type.presentableText
+        name.startsWith("AktivitetProcessor") || name.startsWith("AldeAktivitetProcessor")
+    } ?: return null
+
+    val psiType = superType.type as? PsiClassType ?: return null
+    return psiType.parameters.getOrNull(index)?.presentableText
 }

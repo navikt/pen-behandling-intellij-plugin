@@ -74,6 +74,18 @@
                 level="WARNING"
                 implementationClass="no.nav.pensjon.pen.plugin.inspection.AktivitetWithoutProcessorInspection"
                 displayName="Aktivitet entity without AktivitetProcessor in same file"/>
+        <localInspection
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.ProcessorBehandlingMismatchInspection"
+                displayName="AktivitetProcessor references wrong Behandling type"/>
+        <localInspection
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.ProcessorAktivitetMismatchInspection"
+                displayName="AktivitetProcessor references Aktivitet not in same file"/>
         <intentionAction>
             <className>no.nav.pensjon.pen.plugin.intention.AddAktivitetIntentionAction</className>
             <category>PEN Behandling</category>
