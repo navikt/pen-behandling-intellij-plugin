@@ -4,35 +4,63 @@ IntelliJ-plugin som gjør det enklere å opprette nye behandlinger og aktivitete
 
 ## Funksjoner
 
-### Ny Behandling (New → PEN Behandling → Behandling)
+### Ny Behandling (New → PEN Behandling)
 
 Oppretter en komplett behandling med:
 - `{Navn}Behandling.kt` — Behandlingsklassen med riktige annotasjoner (`@Entity`, `@DiscriminatorValue`, `@ForvalgtAnsvarligTeam`)
-- `A101_{Beskrivelse}.kt` — Initiell aktivitet med `Aktivitet`-klasse og `AktivitetProcessor`
+- `A{nr}_{Beskrivelse}.kt` — Initiell aktivitet med `Aktivitet`-entity og `AktivitetProcessor`
 
 Dialogen lar deg velge:
 - **Navn** — Navnet på behandlingen (uten "Behandling"-suffiks)
 - **Team** — Ansvarlig team (`PESYS_FELLES`, `PESYS_ALDER`, `PESYS_UFORE`)
 - **Prioritet** — `ONLINE`, `ONLINE_BATCH` eller `BATCH`
 - **Input-parametere** — Parametre som serialiseres til JSON i `INPUT`-kolonnen
-- **Initiell aktivitet** — Nummer og beskrivelse for første aktivitet
+- **Initiell aktivitet** — Beskrivelse for første aktivitet
 
-### Ny Aktivitet (New → PEN Behandling → Aktivitet)
+### Ny Aktivitet (Alt+Enter i en Behandling- eller Aktivitet-fil)
 
-Oppretter et aktivitet/prosessor-par:
-- `A{nr}_{Beskrivelse}.kt` — Aktivitet- og AktivitetProcessor-klasse
+Legg til en ny aktivitet direkte fra koden med **Alt+Enter** → *"Add new Aktivitet to this Behandling"*.
 
-Pluginen gjetter automatisk:
-- Behandlingsnavn fra eksisterende `*Behandling.kt`-filer i mappen
-- Neste aktivitetsnummer basert på eksisterende `A\d{3}_*.kt`-filer
+- **Fra en `*Behandling.kt`-fil**: Ny aktivitet legges til etter den høyeste eksisterende
+- **Fra en `A###_*.kt`-fil**: Ny aktivitet settes inn rett etter den nåværende
+
+Nummereringen håndteres automatisk. Hvis du setter inn en aktivitet midt i flyten, renummereres alle etterfølgende aktiviteter automatisk (filnavn og klassenavn oppdateres i alle filer i mappen).
+
+### Gi nytt navn til Aktivitet (Alt+Enter i en Aktivitet-fil)
+
+**Alt+Enter** → *"Rename Aktivitet (PEN conventions)"* oppdaterer:
+- Filnavn (`A101_GammeltNavn.kt` → `A101_NyttNavn.kt`)
+- Klassenavn (entity og processor)
+- Diskriminatorverdi
+- Alle referanser i filer i samme mappe
 
 ### Inspeksjoner
 
-| Inspeksjon | Beskrivelse |
+Pluginen har tre konsoliderte inspeksjoner som sjekker PEN-konvensjoner:
+
+#### Behandling-inspeksjon
+| Sjekk | Alvorlighet |
 |---|---|
-| `@DiscriminatorValue` suffix | Advarer hvis diskriminatorverdien ender med "Behandling" |
-| Manglende `@ForvalgtAnsvarligTeam` | Advarer hvis en `Behandling`-subklasse mangler teamannotasjon |
-| Manglende `@Component` | Advarer hvis en `AktivitetProcessor`-subklasse mangler `@Component` |
+| Manglende `@Entity` | ERROR |
+| Manglende `@DiscriminatorValue` | ERROR |
+| `@DiscriminatorValue` matcher ikke klassenavn-konvensjonen | WARNING |
+| Manglende `@ForvalgtAnsvarligTeam` | WARNING |
+
+#### Aktivitet-inspeksjon
+| Sjekk | Alvorlighet |
+|---|---|
+| Manglende `@Entity` | ERROR |
+| Manglende `@DiscriminatorValue` | ERROR |
+| `@DiscriminatorValue` matcher ikke konvensjonen (`{Behandling}_{Beskrivelse}`) | WARNING |
+| Klassenavn slutter ikke med "Aktivitet" | WARNING |
+| Ingen `AktivitetProcessor` i samme fil | WARNING |
+
+#### Processor-inspeksjon
+| Sjekk | Alvorlighet |
+|---|---|
+| Manglende `@Component` | WARNING |
+| Refererer feil `Behandling`-type (matcher ikke mappen) | WARNING |
+| Refererer `Aktivitet`-type som ikke finnes i samme fil | WARNING |
 
 ## Bygging
 
@@ -51,7 +79,7 @@ Plugin-filen havner i `build/distributions/`.
 
 ## Bruk
 
-1. Høyreklikk på en mappe i PEN-prosjektet (under `domain/`)
-2. Velg **New → PEN Behandling → Behandling** eller **Aktivitet**
-3. Fyll inn skjemaet og klikk OK
-4. Filene opprettes automatisk med korrekt boilerplate
+1. **Ny behandling**: Høyreklikk på en mappe → **New → PEN Behandling** → fyll inn skjemaet
+2. **Ny aktivitet**: Åpne en behandlings- eller aktivitetsfil → **Alt+Enter** → *"Add new Aktivitet to this Behandling"*
+3. **Gi nytt navn**: Åpne en aktivitetsfil → **Alt+Enter** → *"Rename Aktivitet (PEN conventions)"*
+4. **Inspeksjoner**: Aktiveres automatisk i alle Kotlin-filer med Behandling/Aktivitet/Processor-klasser
