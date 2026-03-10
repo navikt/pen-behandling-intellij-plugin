@@ -17,6 +17,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
 
     private val nameField = JBTextField()
     private val discriminatorField = JBTextField()
+    private val requestContextUserIdField = JBTextField()
     private val aktivitetDescriptionField = JBTextField()
 
     private var selectedTeam = TEAMS[0]
@@ -74,6 +75,11 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
                 comboBox(PRIORITIES)
                     .onChanged { selectedPriority = it.item }
                     .comment("ONLINE = brukervendt, ONLINE_BATCH = automatisk, BATCH = nattlig")
+            }
+            row("RequestContextUserId:") {
+                cell(requestContextUserIdField)
+                    .columns(COLUMNS_MEDIUM)
+                    .comment("Valgfritt. Overstyrer getRequestContextUserId(), f.eks. 'Aldersovergang'")
             }
         }
 
@@ -228,6 +234,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         }.filter { it.name.isNotEmpty() && it.type.isNotEmpty() },
         initialAktivitetNumber = "A101",
         initialAktivitetDescription = aktivitetDescriptionField.text.trim(),
+        requestContextUserId = requestContextUserIdField.text.trim().ifEmpty { null },
     )
 
     companion object {

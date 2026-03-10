@@ -73,6 +73,11 @@ object BehandlingGenerator {
             appendLine()
             appendLine("    override fun opprettInitiellAktivitet(): Aktivitet = $initialAktivitetClass()")
 
+            if (model.requestContextUserId != null) {
+                appendLine()
+                appendLine("    override fun getRequestContextUserId(): String = \"${model.requestContextUserId}\"")
+            }
+
             if (hasInput) {
                 appendLine()
                 appendLine("    @Serializable")

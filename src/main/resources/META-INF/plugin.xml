@@ -54,6 +54,10 @@
             <className>no.nav.pensjon.pen.plugin.intention.AddOutputParameterIntentionAction</className>
             <category>PEN Behandling</category>
         </intentionAction>
+        <intentionAction>
+            <className>no.nav.pensjon.pen.plugin.intention.AddRequestContextUserIdIntentionAction</className>
+            <category>PEN Behandling</category>
+        </intentionAction>
     </extensions>
 
     <actions>

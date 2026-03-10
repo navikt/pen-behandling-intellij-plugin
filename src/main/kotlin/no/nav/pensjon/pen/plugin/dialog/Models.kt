@@ -9,6 +9,7 @@ data class BehandlingModel(
     val outputParameters: List<ParameterModel>,
     val initialAktivitetNumber: String,
     val initialAktivitetDescription: String,
+    val requestContextUserId: String? = null,
 )
 
 data class ParameterModel(
