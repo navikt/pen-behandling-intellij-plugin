@@ -4,6 +4,13 @@
 
 IntelliJ-plugin som gjør det enklere å opprette nye behandlinger og aktiviteter i PEN's behandlingsløsning.
 
+## Hvordan ta i bruk
+
+1. Last ned siste versjon av plugin-ZIP fra [Releases](https://github.com/navikt/pen-behandling-intellij-plugin/releases)
+2. I IntelliJ: **Settings → Plugins → ⚙️ → Install Plugin from Disk...**
+3. Velg den nedlastede ZIP-filen
+4. Restart IntelliJ
+
 ## Funksjoner
 
 ### Ny Behandling (New → PEN Behandling)
@@ -76,20 +83,13 @@ Pluginen har tre konsoliderte inspeksjoner som sjekker at konvensjonene i dokume
 | Refererer feil `Behandling`-type (matcher ikke mappen) | WARNING |
 | Refererer `Aktivitet`-type som ikke finnes i samme fil | WARNING |
 
-## Bygging
+## Bygging (for utvikling)
 
 ```bash
 ./gradlew buildPlugin
 ```
 
 Plugin-filen havner i `build/distributions/`.
-
-## Installasjon
-
-1. Bygg pluginen med `./gradlew buildPlugin`
-2. I IntelliJ: **Settings → Plugins → ⚙️ → Install Plugin from Disk...**
-3. Velg ZIP-filen fra `build/distributions/`
-4. Restart IntelliJ
 
 ## Bruk
 
