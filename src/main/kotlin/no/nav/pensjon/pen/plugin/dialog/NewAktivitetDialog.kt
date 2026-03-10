@@ -4,16 +4,18 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.dsl.builder.*
+import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
+import com.intellij.ui.dsl.builder.COLUMNS_SHORT
+import com.intellij.ui.dsl.builder.columns
+import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
 
 class NewAktivitetDialog(
     project: Project,
-    suggestedBehandlingName: String = "",
+    private val behandlingName: String,
     suggestedNumber: String = "A101",
 ) : DialogWrapper(project) {
 
-    private val behandlingNameField = JBTextField(suggestedBehandlingName)
     private val aktivitetNumberField = JBTextField(suggestedNumber)
     private val aktivitetDescriptionField = JBTextField()
     private var isLastAktivitet = true
@@ -25,15 +27,14 @@ class NewAktivitetDialog(
     }
 
     override fun createCenterPanel(): JComponent = panel {
-        row("Behandling name:") {
-            cell(behandlingNameField)
-                .columns(COLUMNS_MEDIUM)
-                .focused()
-                .comment("Name without 'Behandling' suffix, e.g. 'FalskId'")
+        row("Behandling:") {
+            label(behandlingName.ifEmpty { "(unknown)" })
+                .bold()
         }
         row("Aktivitet number:") {
             cell(aktivitetNumberField)
                 .columns(COLUMNS_SHORT)
+                .focused()
                 .comment("e.g. A101, A102, A201")
         }
         row("Description:") {
@@ -52,14 +53,6 @@ class NewAktivitetDialog(
     }
 
     override fun doValidate(): ValidationInfo? {
-        val name = behandlingNameField.text.trim()
-        if (name.isEmpty()) {
-            return ValidationInfo("Behandling name is required", behandlingNameField)
-        }
-        if (!name[0].isUpperCase()) {
-            return ValidationInfo("Behandling name must start with an uppercase letter", behandlingNameField)
-        }
-
         val aktNum = aktivitetNumberField.text.trim()
         if (!aktNum.matches(Regex("A\\d{3}"))) {
             return ValidationInfo("Number must match pattern A followed by 3 digits (e.g. A102)", aktivitetNumberField)
@@ -77,7 +70,7 @@ class NewAktivitetDialog(
     }
 
     fun getModel(): AktivitetModel = AktivitetModel(
-        behandlingName = behandlingNameField.text.trim().removeSuffix("Behandling"),
+        behandlingName = behandlingName.removeSuffix("Behandling"),
         aktivitetNumber = aktivitetNumberField.text.trim(),
         aktivitetDescription = aktivitetDescriptionField.text.trim(),
         isLastAktivitet = isLastAktivitet,
