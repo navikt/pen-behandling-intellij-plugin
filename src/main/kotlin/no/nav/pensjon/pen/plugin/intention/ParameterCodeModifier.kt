@@ -97,15 +97,22 @@ object ParameterCodeModifier {
         val existingContent = text.substring(openParen + 1, closeParen).trim()
         val defaultSuffix = if (isOutput) "? = null" else ""
 
-        return if (existingContent.isEmpty()) {
-            text.substring(0, openParen + 1) +
+        if (existingContent.isEmpty()) {
+            return text.substring(0, openParen + 1) +
                     "\n        val $paramName: $paramType$defaultSuffix\n    " +
                     text.substring(closeParen)
-        } else {
-            text.substring(0, closeParen) +
-                    ",\n        val $paramName: $paramType$defaultSuffix" +
-                    text.substring(closeParen)
         }
+
+        // Find the last non-whitespace character before closeParen
+        val beforeClose = text.substring(openParen + 1, closeParen)
+        val lastNonWhitespace = beforeClose.indexOfLast { !it.isWhitespace() }
+        val insertPos = openParen + 1 + lastNonWhitespace + 1
+        val trailingComma = beforeClose[lastNonWhitespace] == ','
+        val prefix = if (trailingComma) "" else ","
+
+        return text.substring(0, insertPos) +
+                "$prefix\n        val $paramName: $paramType$defaultSuffix," +
+                text.substring(insertPos)
     }
 
     /**
@@ -287,18 +294,23 @@ object ParameterCodeModifier {
             val existingParams = text.substring(openParen + 1, closeParen).trim()
 
             if (existingParams.isEmpty()) {
-                // Empty constructor: class Foo() → class Foo(\n    paramName: Type\n)
                 text.substring(0, openParen + 1) +
                         "\n    $paramName: $paramType\n" +
                         text.substring(closeParen)
             } else {
-                // Has params: add after last one
-                text.substring(0, closeParen) +
-                        ",\n    $paramName: $paramType" +
-                        text.substring(closeParen)
+                // Find last non-whitespace before closeParen
+                val beforeClose = text.substring(openParen + 1, closeParen)
+                val lastNonWhitespace = beforeClose.indexOfLast { !it.isWhitespace() }
+                val insertPos = openParen + 1 + lastNonWhitespace + 1
+                val trailingComma = beforeClose[lastNonWhitespace] == ','
+                val prefix = if (trailingComma) "" else ","
+
+                text.substring(0, insertPos) +
+                        "$prefix\n    $paramName: $paramType," +
+                        text.substring(insertPos)
             }
         } else {
-            // No constructor — add one: class Foo : → class Foo(\n    paramName: Type\n) :
+            // No constructor — add one
             text.substring(0, afterClassName) +
                     "(\n    $paramName: $paramType\n)" +
                     text.substring(afterClassName)
