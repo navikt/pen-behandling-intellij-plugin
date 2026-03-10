@@ -53,10 +53,6 @@ Nummereringen håndteres automatisk. Hvis du setter inn en aktivitet midt i flyt
 - Diskriminatorverdi
 - Alle referanser i filer i samme mappe
 
-![rename_aktivitet.png](docs/images/rename_aktivitet.png)
-
-![rename_aktivitet_dialog.png](docs/images/rename_aktivitet_dialog.png)
-
 ### Legg til input/output-parameter (Alt+Enter)
 
 I en eksisterende Behandling- eller Aktivitet-fil: **Alt+Enter** → *"Legg til input-parameter"* eller *"Legg til output-parameter"*.
