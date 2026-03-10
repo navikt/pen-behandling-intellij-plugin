@@ -38,6 +38,42 @@
                 level="WARNING"
                 implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingComponentInspection"
                 displayName="AktivitetProcessor subclass missing @Component"/>
+        <localInspection
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="ERROR"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingEntityOnBehandlingInspection"
+                displayName="Behandling subclass missing @Entity"/>
+        <localInspection
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="ERROR"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingEntityOnAktivitetInspection"
+                displayName="Aktivitet subclass missing @Entity"/>
+        <localInspection
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="ERROR"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingDiscriminatorOnBehandlingInspection"
+                displayName="Behandling subclass missing @DiscriminatorValue"/>
+        <localInspection
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="ERROR"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.MissingDiscriminatorOnAktivitetInspection"
+                displayName="Aktivitet subclass missing @DiscriminatorValue"/>
+        <localInspection
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.AktivitetDiscriminatorValueInspection"
+                displayName="@DiscriminatorValue on Aktivitet should not end with 'Aktivitet'"/>
+        <localInspection
+                groupName="PEN Behandling"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="no.nav.pensjon.pen.plugin.inspection.AktivitetWithoutProcessorInspection"
+                displayName="Aktivitet entity without AktivitetProcessor in same file"/>
         <intentionAction>
             <className>no.nav.pensjon.pen.plugin.intention.AddAktivitetIntentionAction</className>
             <category>PEN Behandling</category>
