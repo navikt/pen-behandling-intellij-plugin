@@ -19,6 +19,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
     private val discriminatorField = JBTextField()
     private val requestContextUserIdField = JBTextField()
     private val aktivitetDescriptionField = JBTextField()
+    private val integrationTestCheckbox = JCheckBox("Opprett integrasjonstest", false)
 
     private var selectedTeam = TEAMS[0]
     private var selectedPriority = PRIORITIES[0]
@@ -115,6 +116,11 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
                         .columns(COLUMNS_MEDIUM)
                         .comment("Funksjonelt navn, f.eks. 'SjekkOmIdentErFalsk'")
                 }
+            }
+            separator()
+            row {
+                cell(integrationTestCheckbox)
+                    .comment("Oppretter {Navn}BehandlingIT.kt i test-mappen")
             }
         }
 
@@ -235,6 +241,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         initialAktivitetNumber = "A101",
         initialAktivitetDescription = aktivitetDescriptionField.text.trim(),
         requestContextUserId = requestContextUserIdField.text.trim().ifEmpty { null },
+        createIntegrationTest = integrationTestCheckbox.isSelected,
     )
 
     companion object {

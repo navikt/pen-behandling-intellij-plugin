@@ -8,11 +8,14 @@ import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileTypes.FileTypeManager
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.PsiManager
 import no.nav.pensjon.pen.plugin.dialog.NewBehandlingDialog
 import no.nav.pensjon.pen.plugin.generator.AktivitetGenerator
 import no.nav.pensjon.pen.plugin.generator.BehandlingGenerator
+import no.nav.pensjon.pen.plugin.generator.IntegrationTestGenerator
 
 class NewBehandlingAction : AnAction() {
 
@@ -58,11 +61,46 @@ class NewBehandlingAction : AnAction() {
             addedBehandling.containingFile?.virtualFile?.let {
                 FileEditorManager.getInstance(project).openFile(it, true)
             }
+
+            if (model.createIntegrationTest) {
+                val testDir = findOrCreateTestDirectory(directory)
+                if (testDir != null) {
+                    val testContent = IntegrationTestGenerator.generate(packageName, model)
+                    val testFile = psiFileFactory.createFileFromText(
+                        "${model.name}BehandlingIT.kt",
+                        kotlinFileType,
+                        testContent
+                    )
+                    testDir.add(testFile)
+                }
+            }
         })
     }
 
     override fun update(e: AnActionEvent) {
         val ideView = e.getData(LangDataKeys.IDE_VIEW)
         e.presentation.isEnabledAndVisible = e.project != null && ideView != null && ideView.directories.isNotEmpty()
+    }
+
+    /**
+     * Given a source directory like src/main/java/no/nav/.../domain/foo,
+     * finds or creates the mirror directory at src/test/java/no/nav/.../domain/foo.
+     */
+    private fun findOrCreateTestDirectory(sourceDir: PsiDirectory): PsiDirectory? {
+        val path = sourceDir.virtualFile.path
+        val mainMarkers = listOf("/src/main/java/", "/src/main/kotlin/")
+
+        for (marker in mainMarkers) {
+            val idx = path.indexOf(marker)
+            if (idx >= 0) {
+                val projectRoot = path.substring(0, idx)
+                val relativePath = path.substring(idx + marker.length)
+                val testPath = "$projectRoot/src/test/java/$relativePath"
+
+                val testVDir = VfsUtil.createDirectoryIfMissing(testPath) ?: return null
+                return PsiManager.getInstance(sourceDir.project).findDirectory(testVDir)
+            }
+        }
+        return null
     }
 }

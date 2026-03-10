@@ -10,6 +10,7 @@ data class BehandlingModel(
     val initialAktivitetNumber: String,
     val initialAktivitetDescription: String,
     val requestContextUserId: String? = null,
+    val createIntegrationTest: Boolean = false,
 )
 
 data class ParameterModel(
