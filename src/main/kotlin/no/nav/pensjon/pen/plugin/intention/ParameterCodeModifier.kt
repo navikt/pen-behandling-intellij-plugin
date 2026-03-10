@@ -68,6 +68,9 @@ object ParameterCodeModifier {
         if (hasExisting) {
             result = addFieldToDataClass(result, "Output", paramName, paramType, isOutput = true)
             result = addGetterBeforeDataClass(result, "Output", paramName, paramType, isOutput = true)
+            if (!isBehandling) {
+                result = addSetOutputParameter(result, paramName, paramType)
+            }
         } else {
             result = addNewOutputBlock(result, paramName, paramType, isBehandling)
             result = addImportsIfMissing(result, OUTPUT_IMPORTS)
@@ -334,5 +337,32 @@ object ParameterCodeModifier {
         } else {
             text.substring(0, closeParen) + ", $paramName" + text.substring(closeParen)
         }
+    }
+
+    /**
+     * Updates the setOutput method for Aktivitet files:
+     * - Adds the new parameter to the method signature
+     * - Adds the new parameter to the Output(...) constructor call
+     */
+    private fun addSetOutputParameter(text: String, paramName: String, paramType: String): String {
+        val marker = "fun setOutput("
+        val idx = text.indexOf(marker)
+        if (idx == -1) return text
+
+        val openParen = idx + marker.length - 1
+        val closeParen = findMatchingParen(text, openParen) ?: return text
+        val existingParams = text.substring(openParen + 1, closeParen).trim()
+
+        // Add to method signature
+        var result = if (existingParams.isEmpty()) {
+            text.substring(0, openParen + 1) + "$paramName: $paramType" + text.substring(closeParen)
+        } else {
+            text.substring(0, closeParen) + ", $paramName: $paramType" + text.substring(closeParen)
+        }
+
+        // Add to Output(...) constructor call inside the method body
+        result = addToJsonEncodeCall(result, "Output", paramName)
+
+        return result
     }
 }
