@@ -78,6 +78,10 @@
             <className>no.nav.pensjon.pen.plugin.intention.AddAktivitetIntentionAction</className>
             <category>PEN Behandling</category>
         </intentionAction>
+        <intentionAction>
+            <className>no.nav.pensjon.pen.plugin.intention.RenameAktivitetIntentionAction</className>
+            <category>PEN Behandling</category>
+        </intentionAction>
     </extensions>
 
     <actions>
