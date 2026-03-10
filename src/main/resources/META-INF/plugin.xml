@@ -3,11 +3,11 @@
     <name>PEN Behandling Generator</name>
     <vendor>NAV Pensjon</vendor>
     <description><![CDATA[
-        Generates boilerplate code for new Behandlinger and Aktiviteter in PEN's behandlingsløsning.
+        Genererer kode for nye behandlinger og aktiviteter i PEN's behandlingsløsning.
         <ul>
-            <li>New → PEN Behandling → Behandling: Creates a Behandling class with initial Aktivitet</li>
-            <li>Alt+Enter in a Behandling or Aktivitet file → "Add new Aktivitet to this Behandling"</li>
-            <li>Inspections for naming conventions and missing annotations</li>
+            <li>New → PEN Behandling: Oppretter en behandlingsklasse med første aktivitet</li>
+            <li>Alt+Enter i en behandlings- eller aktivitetfil → "Legg til ny aktivitet i denne behandlingen"</li>
+            <li>Inspeksjoner for navnekonvensjoner og manglende annotasjoner</li>
         </ul>
     ]]></description>
 
@@ -52,7 +52,7 @@
         <action id="PenBehandling.NewBehandling"
                 class="no.nav.pensjon.pen.plugin.action.NewBehandlingAction"
                 text="PEN Behandling"
-                description="Create a new Behandling with initial Aktivitet"
+                description="Opprett en ny behandling med første aktivitet"
                 icon="AllIcons.Nodes.Class">
             <add-to-group group-id="NewGroup" anchor="last"/>
         </action>

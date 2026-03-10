@@ -27,7 +27,7 @@ class AddAktivitetIntentionAction : PsiElementBaseIntentionAction() {
 
     override fun getFamilyName() = "PEN Behandling"
 
-    override fun getText() = "Add new Aktivitet to this Behandling"
+    override fun getText() = "Legg til ny aktivitet i denne behandlingen"
 
     override fun startInWriteAction() = false
 

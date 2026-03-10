@@ -17,7 +17,6 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
 
     private val nameField = JBTextField()
     private val discriminatorField = JBTextField()
-    private val aktivitetNumberField = JBTextField("A101")
     private val aktivitetDescriptionField = JBTextField()
 
     private var selectedTeam = TEAMS[0]
@@ -33,7 +32,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
     private lateinit var parametersContainer: JPanel
 
     init {
-        title = "New Behandling"
+        title = "Ny Behandling"
         setSize(550, 550)
         init()
 
@@ -53,25 +52,25 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         val mainPanel = JPanel(BorderLayout())
 
         val topPanel = panel {
-            row("Name:") {
+            row("Navn:") {
                 cell(nameField)
                     .columns(COLUMNS_MEDIUM)
-                    .comment("Class will be named {Name}Behandling")
+                    .comment("Klassen vil bli kalt {Navn}Behandling")
                     .focused()
             }
-            row("Discriminator value:") {
+            row("Diskriminatorverdi:") {
                 cell(discriminatorField)
                     .columns(COLUMNS_MEDIUM)
-                    .comment("Should NOT end with 'Behandling'")
+                    .comment("Skal IKKE slutte med 'Behandling'")
             }
             row("Team:") {
                 comboBox(TEAMS)
                     .onChanged { selectedTeam = it.item }
             }
-            row("Priority:") {
+            row("Prioritet:") {
                 comboBox(PRIORITIES)
                     .onChanged { selectedPriority = it.item }
-                    .comment("ONLINE = user-facing, ONLINE_BATCH = automatic, BATCH = nightly")
+                    .comment("ONLINE = brukervendt, ONLINE_BATCH = automatisk, BATCH = nattlig")
             }
         }
 
@@ -80,13 +79,13 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         }
 
         val parametersSection = JPanel(BorderLayout()).apply {
-            border = BorderFactory.createTitledBorder("Input Parameters")
+            border = BorderFactory.createTitledBorder("Input-parametere")
 
             val headerPanel = JPanel(FlowLayout(FlowLayout.LEFT)).apply {
-                add(JButton("Add parameter").apply {
+                add(JButton("Legg til parameter").apply {
                     addActionListener { addParameterRow() }
                 })
-                add(JBLabel("Parameters will be serialized as JSON in the INPUT column").apply {
+                add(JBLabel("Parametere serialiseres som JSON i INPUT-kolonnen").apply {
                     foreground = java.awt.Color.GRAY
                 })
             }
@@ -96,16 +95,11 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
 
         val bottomPanel = panel {
             separator()
-            group("Initial Aktivitet") {
-                row("Number:") {
-                    cell(aktivitetNumberField)
-                        .columns(COLUMNS_SHORT)
-                        .comment("e.g. A101")
-                }
-                row("Description:") {
+            group("Første aktivitet") {
+                row("Beskrivelse:") {
                     cell(aktivitetDescriptionField)
                         .columns(COLUMNS_MEDIUM)
-                        .comment("Functional name, e.g. 'SjekkOmIdentErFalsk'")
+                        .comment("Funksjonelt navn, f.eks. 'SjekkOmIdentErFalsk'")
                 }
             }
         }
@@ -128,7 +122,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         val gbc = GridBagConstraints().apply { insets = Insets(2, 4, 2, 4) }
 
         gbc.gridx = 0; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0.0
-        rowPanel.add(JBLabel("Name:"), gbc)
+        rowPanel.add(JBLabel("Navn:"), gbc)
 
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0
         rowPanel.add(nameField, gbc)
@@ -163,34 +157,29 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
     override fun doValidate(): ValidationInfo? {
         val name = nameField.text.trim()
         if (name.isEmpty()) {
-            return ValidationInfo("Name is required", nameField)
+            return ValidationInfo("Navn er påkrevd", nameField)
         }
         if (!name[0].isUpperCase()) {
-            return ValidationInfo("Name must start with an uppercase letter", nameField)
+            return ValidationInfo("Navn må starte med stor bokstav", nameField)
         }
         if (name.contains(" ")) {
-            return ValidationInfo("Name must not contain spaces", nameField)
+            return ValidationInfo("Navn kan ikke inneholde mellomrom", nameField)
         }
 
         val discriminator = discriminatorField.text.trim()
         if (discriminator.isEmpty()) {
-            return ValidationInfo("Discriminator value is required", discriminatorField)
+            return ValidationInfo("Diskriminatorverdi er påkrevd", discriminatorField)
         }
         if (discriminator.endsWith("Behandling")) {
-            return ValidationInfo("Discriminator value should not end with 'Behandling'", discriminatorField)
-        }
-
-        val aktNum = aktivitetNumberField.text.trim()
-        if (!aktNum.matches(Regex("A\\d{3}"))) {
-            return ValidationInfo("Aktivitet number must match pattern A followed by 3 digits (e.g. A101)", aktivitetNumberField)
+            return ValidationInfo("Diskriminatorverdi skal ikke slutte med 'Behandling'", discriminatorField)
         }
 
         val aktDesc = aktivitetDescriptionField.text.trim()
         if (aktDesc.isEmpty()) {
-            return ValidationInfo("Aktivitet description is required", aktivitetDescriptionField)
+            return ValidationInfo("Beskrivelse er påkrevd", aktivitetDescriptionField)
         }
         if (!aktDesc[0].isUpperCase()) {
-            return ValidationInfo("Aktivitet description must start with an uppercase letter", aktivitetDescriptionField)
+            return ValidationInfo("Beskrivelse må starte med stor bokstav", aktivitetDescriptionField)
         }
 
         return null
@@ -204,7 +193,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         parameters = parameterRows.map { row ->
             ParameterModel(row.nameField.text.trim(), row.typeField.text.trim())
         }.filter { it.name.isNotEmpty() && it.type.isNotEmpty() },
-        initialAktivitetNumber = aktivitetNumberField.text.trim(),
+        initialAktivitetNumber = "A101",
         initialAktivitetDescription = aktivitetDescriptionField.text.trim(),
     )
 

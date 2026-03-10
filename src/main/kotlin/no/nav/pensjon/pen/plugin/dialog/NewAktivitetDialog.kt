@@ -18,7 +18,7 @@ class NewAktivitetDialog(
     private var isLastAktivitet = true
 
     init {
-        title = "New Aktivitet"
+        title = "Ny Aktivitet"
         setSize(500, 300)
         init()
     }
@@ -28,17 +28,17 @@ class NewAktivitetDialog(
             label(behandlingName.ifEmpty { "(unknown)" })
                 .bold()
         }
-        row("Description:") {
+        row("Beskrivelse:") {
             cell(aktivitetDescriptionField)
                 .columns(COLUMNS_MEDIUM)
                 .focused()
-                .comment("Functional name, e.g. 'OpprettOppgave'")
+                .comment("Funksjonelt navn, f.eks. 'OpprettOppgave'")
         }
 
         separator()
 
         row {
-            checkBox("This is the last aktivitet (returns aktivitetFullfort())")
+            checkBox("Dette er siste aktivitet (returnerer aktivitetFullfort())")
                 .onChanged { isLastAktivitet = it.isSelected }
                 .applyToComponent { isSelected = true }
         }
@@ -47,10 +47,10 @@ class NewAktivitetDialog(
     override fun doValidate(): ValidationInfo? {
         val desc = aktivitetDescriptionField.text.trim()
         if (desc.isEmpty()) {
-            return ValidationInfo("Description is required", aktivitetDescriptionField)
+            return ValidationInfo("Beskrivelse er påkrevd", aktivitetDescriptionField)
         }
         if (!desc[0].isUpperCase()) {
-            return ValidationInfo("Description must start with an uppercase letter", aktivitetDescriptionField)
+            return ValidationInfo("Beskrivelse må starte med stor bokstav", aktivitetDescriptionField)
         }
 
         return null

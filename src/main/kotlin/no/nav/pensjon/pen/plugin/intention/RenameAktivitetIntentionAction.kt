@@ -23,7 +23,7 @@ class RenameAktivitetIntentionAction : PsiElementBaseIntentionAction() {
 
     override fun getFamilyName() = "PEN Behandling"
 
-    override fun getText() = "Rename Aktivitet (PEN conventions)"
+    override fun getText() = "Gi nytt navn til aktivitet (PEN-konvensjoner)"
 
     override fun startInWriteAction() = false
 
@@ -43,8 +43,8 @@ class RenameAktivitetIntentionAction : PsiElementBaseIntentionAction() {
 
         val newDesc = Messages.showInputDialog(
             project,
-            "New description (PascalCase, e.g. 'OpprettOppgave'):",
-            "Rename Aktivitet $numStr",
+            "Ny beskrivelse (PascalCase, f.eks. 'OpprettOppgave'):",
+            "Gi nytt navn til aktivitet $numStr",
             null,
             oldDesc,
             object : InputValidator {
