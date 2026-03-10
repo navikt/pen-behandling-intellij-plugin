@@ -20,7 +20,7 @@ Dialogen lar deg velge:
 - **Prioritet** — `ONLINE`, `ONLINE_BATCH` eller `BATCH`
 - **Input-parametere** — Parametre som serialiseres til JSON i `INPUT`-kolonnen
 - **Initiell aktivitet** — Beskrivelse for første aktivitet
-- 
+
 ![ny_behandling_dialog.png](docs/images/ny_behandling_dialog.png)
 
 ### Ny Aktivitet (Alt+Enter i en Behandling- eller Aktivitet-fil)
@@ -50,7 +50,7 @@ Nummereringen håndteres automatisk. Hvis du setter inn en aktivitet midt i flyt
 
 ### Inspeksjoner
 
-Pluginen har tre konsoliderte inspeksjoner som sjekker PEN-konvensjoner:
+Pluginen har tre konsoliderte inspeksjoner som sjekker at konvensjonene i dokumentasjon er korrekt. Dennne skal være i henhold til dokumentasjon for Behandlingsløsningen: https://pensjon-dokumentasjon.ansatt.dev.nav.no/pen/Behandlingsloesningen/Behandlingslosningen.html 
 
 #### Behandling-inspeksjon
 | Sjekk | Alvorlighet |
