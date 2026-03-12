@@ -22,7 +22,7 @@ class RenameAktivitetIntentionAction : PsiElementBaseIntentionAction() {
 
     override fun getFamilyName() = "PEN Behandling"
 
-    override fun getText() = "Gi nytt navn til aktivitet (PEN-konvensjoner)"
+    override fun getText() = "Gi nytt navn til aktivitet"
 
     override fun startInWriteAction() = false
 
