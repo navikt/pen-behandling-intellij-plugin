@@ -54,7 +54,7 @@ jobs:
             "          url=\"${DOWNLOAD_URL}\"" \
             "          version=\"${{ steps.version.outputs.VERSION }}\">" \
             '    <idea-version since-build="243" until-build="261.*"/>' \
-            '    <name>PEN Behandling Generator</name>' \
+            '    <name>PEN Behandling Toolkit</name>' \
             '    <vendor>NAV Pensjon</vendor>' \
             '    <description>Genererer kode for nye behandlinger og aktiviteter i PEN</description>' \
             '  </plugin>' \

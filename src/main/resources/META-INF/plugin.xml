@@ -1,6 +1,6 @@
 <idea-plugin>
     <id>no.nav.pensjon.pen.behandling-plugin</id>
-    <name>PEN Behandling Generator</name>
+    <name>PEN Behandling Toolkit</name>
     <vendor>NAV Pensjon</vendor>
     <description><![CDATA[
         Genererer kode for nye behandlinger og aktiviteter i PEN's behandlingsløsning.

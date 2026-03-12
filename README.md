@@ -1,4 +1,4 @@
-# PEN Behandling IntelliJ Plugin
+# PEN Behandling Toolkit
 
 [![Build](https://github.com/navikt/pen-behandling-intellij-plugin/actions/workflows/build.yml/badge.svg)](https://github.com/navikt/pen-behandling-intellij-plugin/actions/workflows/build.yml)
 
@@ -10,7 +10,7 @@ IntelliJ-plugin som gjør det enklere å opprette nye behandlinger og aktivitete
 
 1. I IntelliJ: **Settings → Plugins → ⚙️ → Manage Plugin Repositories...**
 2. Legg til URL: `https://navikt.github.io/pen-behandling-intellij-plugin/updatePlugins.xml`
-3. Søk etter **PEN Behandling Generator** i Plugins-fanen og installer
+3. Søk etter **PEN Behandling Toolkit** i Plugins-fanen og installer
 4. IntelliJ vil automatisk varsle om nye versjoner
 
 ### Manuell installasjon
