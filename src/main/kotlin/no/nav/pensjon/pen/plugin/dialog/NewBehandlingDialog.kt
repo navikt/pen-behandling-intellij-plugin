@@ -20,6 +20,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
     private val requestContextUserIdField = JBTextField()
     private val aktivitetDescriptionField = JBTextField()
     private val integrationTestCheckbox = JCheckBox("Opprett integrasjonstest", false)
+    private val getInputParametereCheckbox = JCheckBox("Generer getInputParametere()", true)
 
     private var selectedTeam = TEAMS[0]
     private var selectedPriority = PRIORITIES[0]
@@ -118,6 +119,10 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
                 }
             }
             separator()
+            row {
+                cell(getInputParametereCheckbox)
+                    .comment("Genererer getInputParametere() slik at input-parametere vises i Verdande")
+            }
             row {
                 cell(integrationTestCheckbox)
                     .comment("Oppretter {Navn}BehandlingIT.kt i test-mappen")
@@ -242,6 +247,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         initialAktivitetDescription = aktivitetDescriptionField.text.trim(),
         requestContextUserId = requestContextUserIdField.text.trim().ifEmpty { null },
         createIntegrationTest = integrationTestCheckbox.isSelected,
+        generateGetInputParametere = getInputParametereCheckbox.isSelected,
     )
 
     companion object {

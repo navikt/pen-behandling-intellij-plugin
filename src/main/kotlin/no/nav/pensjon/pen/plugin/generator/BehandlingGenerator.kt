@@ -78,7 +78,7 @@ object BehandlingGenerator {
                 appendLine("    override fun getRequestContextUserId(): String = \"${model.requestContextUserId}\"")
             }
 
-            if (hasInput) {
+            if (hasInput && model.generateGetInputParametere) {
                 appendLine()
                 appendLine("    override fun getInputParametere(): Map<String, String?> = mapOf(")
                 appendLine(model.parameters.joinToString(",\n") { param ->

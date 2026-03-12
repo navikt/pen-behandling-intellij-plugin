@@ -11,6 +11,7 @@ data class BehandlingModel(
     val initialAktivitetDescription: String,
     val requestContextUserId: String? = null,
     val createIntegrationTest: Boolean = false,
+    val generateGetInputParametere: Boolean = false,
 )
 
 data class ParameterModel(
