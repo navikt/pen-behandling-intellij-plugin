@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   release:
@@ -30,9 +32,36 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
+      - name: Get plugin ZIP filename
+        id: zip
+        run: echo "FILENAME=$(basename build/distributions/*.zip)" >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: "v${{ steps.version.outputs.VERSION }}"
           generate_release_notes: true
           files: build/distributions/*.zip
+
+      - name: Generate updatePlugins.xml
+        run: |
+          mkdir -p _site
+          DOWNLOAD_URL="https://github.com/navikt/pen-behandling-intellij-plugin/releases/download/${GITHUB_REF_NAME}/${{ steps.zip.outputs.FILENAME }}"
+          printf '%s\n' \
+            '<?xml version="1.0" encoding="UTF-8"?>' \
+            '<plugins>' \
+            "  <plugin id=\"no.nav.pensjon.pen.behandling-plugin\"" \
+            "          url=\"${DOWNLOAD_URL}\"" \
+            "          version=\"${{ steps.version.outputs.VERSION }}\">" \
+            '    <idea-version since-build="243" until-build="261.*"/>' \
+            '    <name>PEN Behandling Generator</name>' \
+            '    <vendor>NAV Pensjon</vendor>' \
+            '    <description>Genererer kode for nye behandlinger og aktiviteter i PEN</description>' \
+            '  </plugin>' \
+            '</plugins>' > _site/updatePlugins.xml
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
