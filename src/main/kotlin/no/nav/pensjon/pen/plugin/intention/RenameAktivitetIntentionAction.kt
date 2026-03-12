@@ -4,11 +4,10 @@ import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.InputValidator
-import com.intellij.openapi.ui.Messages
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import no.nav.pensjon.pen.plugin.dialog.RenameAktivitetDialog
 
 /**
  * Intention action (Alt+Enter) that renames an Aktivitet following PEN conventions.
@@ -16,7 +15,7 @@ import com.intellij.psi.PsiElement
  * Updates:
  * - File name (A###_OldDesc.kt → A###_NewDesc.kt)
  * - Class names ({Behandling}A###OldDesc → {Behandling}A###NewDesc)
- * - Discriminator value ("{Behandling}_OldDesc" → "{Behandling}_NewDesc")
+ * - Discriminator value — only if the user opts in (off by default to preserve backward compatibility)
  * - All references in sibling .kt files in the same directory
  */
 class RenameAktivitetIntentionAction : PsiElementBaseIntentionAction() {
@@ -41,24 +40,15 @@ class RenameAktivitetIntentionAction : PsiElementBaseIntentionAction() {
         val oldDesc = match.groupValues[2]
         val behandlingName = guessBehandlingName(directory)
 
-        val newDesc = Messages.showInputDialog(
-            project,
-            "Ny beskrivelse (PascalCase, f.eks. 'OpprettOppgave'):",
-            "Gi nytt navn til aktivitet $numStr",
-            null,
-            oldDesc,
-            object : InputValidator {
-                override fun checkInput(input: String) =
-                    input.isNotBlank() && input[0].isUpperCase() && !input.contains(' ')
+        val dialog = RenameAktivitetDialog(project, numStr, oldDesc)
+        if (!dialog.showAndGet()) return
 
-                override fun canClose(input: String) = checkInput(input)
-            }
-        ) ?: return
-
+        val newDesc = dialog.newDescription
         if (newDesc == oldDesc) return
 
         val oldClassPrefix = "${behandlingName}${numStr}${oldDesc}"
         val newClassPrefix = "${behandlingName}${numStr}${newDesc}"
+        val changeDiscriminator = dialog.shouldChangeDiscriminator
         val oldDiscriminator = "${behandlingName}_${oldDesc}"
         val newDiscriminator = "${behandlingName}_${newDesc}"
 
@@ -75,7 +65,7 @@ class RenameAktivitetIntentionAction : PsiElementBaseIntentionAction() {
                     content = content.replace(oldClassPrefix, newClassPrefix)
                     changed = true
                 }
-                if (content.contains(oldDiscriminator)) {
+                if (changeDiscriminator && content.contains(oldDiscriminator)) {
                     content = content.replace(oldDiscriminator, newDiscriminator)
                     changed = true
                 }

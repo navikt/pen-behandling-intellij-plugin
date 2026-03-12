@@ -18,8 +18,10 @@ import javax.swing.*
 class NewAktivitetDialog(
     project: Project,
     private val behandlingName: String,
+    suggestedNumber: String = "A101",
 ) : DialogWrapper(project) {
 
+    private val aktivitetNumberField = JBTextField(suggestedNumber)
     private val aktivitetDescriptionField = JBTextField()
     private var isLastAktivitet = true
 
@@ -39,6 +41,7 @@ class NewAktivitetDialog(
         title = "Ny Aktivitet"
         setSize(550, 500)
         init()
+        initValidation()
     }
 
     override fun createCenterPanel(): JComponent {
@@ -48,6 +51,11 @@ class NewAktivitetDialog(
             row("Behandling:") {
                 label(behandlingName.ifEmpty { "(ukjent)" })
                     .bold()
+            }
+            row("Aktivitetsnummer:") {
+                cell(aktivitetNumberField)
+                    .columns(COLUMNS_MEDIUM)
+                    .comment("F.eks. 'A101', 'A201'")
             }
             row("Beskrivelse:") {
                 cell(aktivitetDescriptionField)
@@ -159,6 +167,11 @@ class NewAktivitetDialog(
     }
 
     override fun doValidate(): ValidationInfo? {
+        val num = aktivitetNumberField.text.trim()
+        if (!num.matches(Regex("A\\d{3}"))) {
+            return ValidationInfo("Aktivitetsnummer må være på formen A###, f.eks. 'A101'", aktivitetNumberField)
+        }
+
         val desc = aktivitetDescriptionField.text.trim()
         if (desc.isEmpty()) {
             return ValidationInfo("Beskrivelse er påkrevd", aktivitetDescriptionField)
@@ -170,9 +183,9 @@ class NewAktivitetDialog(
         return null
     }
 
-    fun getModel(aktivitetNumber: String): AktivitetModel = AktivitetModel(
+    fun getModel(): AktivitetModel = AktivitetModel(
         behandlingName = behandlingName.removeSuffix("Behandling"),
-        aktivitetNumber = aktivitetNumber,
+        aktivitetNumber = aktivitetNumberField.text.trim(),
         aktivitetDescription = aktivitetDescriptionField.text.trim(),
         isLastAktivitet = isLastAktivitet,
         inputParameters = inputParameterRows.map { row ->

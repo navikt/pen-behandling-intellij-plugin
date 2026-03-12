@@ -80,6 +80,16 @@ object BehandlingGenerator {
 
             if (hasInput) {
                 appendLine()
+                appendLine("    override fun getInputParametere(): Map<String, String?> = mapOf(")
+                appendLine(model.parameters.joinToString(",\n") { param ->
+                    val label = param.name.replaceFirstChar { it.uppercase() }
+                    "        \"$label\" to ${param.name}.toString()"
+                })
+                appendLine("    )")
+            }
+
+            if (hasInput) {
+                appendLine()
                 appendLine("    @Serializable")
                 appendLine("    data class Parametere(")
                 appendLine("        $serializableFields")

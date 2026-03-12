@@ -50,18 +50,19 @@ class AddAktivitetIntentionAction : PsiElementBaseIntentionAction() {
             if (highest != null) highest + 1 else 100
         }
 
-        val dialog = NewAktivitetDialog(project, behandlingName)
+        val dialog = NewAktivitetDialog(project, behandlingName, "A${newNumber.toString().padStart(3, '0')}")
         if (!dialog.showAndGet()) return
 
-        val newNumberStr = "A${newNumber.toString().padStart(3, '0')}"
-        val model = dialog.getModel(newNumberStr)
+        val model = dialog.getModel()
+        val newNumberStr = model.aktivitetNumber
+        val actualNewNumber = newNumberStr.removePrefix("A").toIntOrNull() ?: return
         val packageName = PackageUtil.getPackageName(directory)
         val kotlinFileType = FileTypeManager.getInstance().getFileTypeByExtension("kt")
 
         WriteCommandAction.runWriteCommandAction(project, "Create Aktivitet", null, {
-            // Renumber existing files with number >= newNumber (highest first to avoid conflicts)
+            // Renumber existing files with number >= actualNewNumber (highest first to avoid conflicts)
             val filesToRenumber = directory.files
-                .filter { f -> extractNumber(f.name)?.let { it >= newNumber } == true }
+                .filter { f -> extractNumber(f.name)?.let { it >= actualNewNumber } == true }
                 .sortedByDescending { f -> extractNumber(f.name) }
 
             for (file in filesToRenumber) {

@@ -25,7 +25,7 @@ Dialogen lar deg velge:
 - **Navn** — Navnet på behandlingen (uten "Behandling"-suffiks)
 - **Team** — Ansvarlig team (`PESYS_FELLES`, `PESYS_ALDER`, `PESYS_UFORE`)
 - **Prioritet** — `ONLINE`, `ONLINE_BATCH` eller `BATCH`
-- **Input-parametere** — Parametre som serialiseres til JSON i `INPUT`-kolonnen
+- **Input-parametere** — Parametre som serialiseres til JSON i `INPUT`-kolonnen. Genererer automatisk `getInputParametere()` slik at parametrene vises i Verdande.
 - **Output-parametere** — Parametre som serialiseres til JSON i `OUTPUT`-kolonnen
 - **RequestContextUserId** — Valgfri overstyring av `getRequestContextUserId()`
 - **Initiell aktivitet** — Beskrivelse for første aktivitet
@@ -34,7 +34,7 @@ Dialogen lar deg velge:
 
 ### Ny Aktivitet (Alt+Enter i en Behandling- eller Aktivitet-fil)
 
-Legg til en ny aktivitet direkte fra koden med **Alt+Enter** → *"Add new Aktivitet to this Behandling"*.
+Legg til en ny aktivitet direkte fra koden med **Alt+Enter** → *"Legg til ny aktivitet i denne behandlingen"*.
 
 - **Fra en `*Behandling.kt`-fil**: Ny aktivitet legges til etter den høyeste eksisterende
 - **Fra en `A###_*.kt`-fil**: Ny aktivitet settes inn rett etter den nåværende
@@ -43,15 +43,31 @@ Legg til en ny aktivitet direkte fra koden med **Alt+Enter** → *"Add new Aktiv
 
 ![ny_aktivitet_dialog.png](docs/images/ny_aktivitet_dialog.png)
 
-Nummereringen håndteres automatisk. Hvis du setter inn en aktivitet midt i flyten, renummereres alle etterfølgende aktiviteter automatisk (filnavn og klassenavn oppdateres i alle filer i mappen).
+Dialogen viser et foreslått aktivitetsnummer som kan overstyres (f.eks. `A201` i stedet for `A104`). Hvis du setter inn en aktivitet midt i flyten, renummereres alle etterfølgende aktiviteter automatisk (filnavn og klassenavn oppdateres i alle filer i mappen).
 
 ### Gi nytt navn til Aktivitet (Alt+Enter i en Aktivitet-fil)
 
-**Alt+Enter** → *"Rename Aktivitet (PEN conventions)"* oppdaterer:
+**Alt+Enter** → *"Gi nytt navn til aktivitet (PEN-konvensjoner)"* oppdaterer:
 - Filnavn (`A101_GammeltNavn.kt` → `A101_NyttNavn.kt`)
 - Klassenavn (entity og processor)
-- Diskriminatorverdi
 - Alle referanser i filer i samme mappe
+
+Diskriminatorverdien beholdes som standard for å bevare bakoverkompatibilitet. En checkbox i dialogen lar deg velge å endre den også.
+
+### Endre aktivitetsnummer (Alt+Enter i en Aktivitet-fil)
+
+**Alt+Enter** → *"Endre aktivitetsnummer"* lar deg endre A-nummeret på en aktivitet (f.eks. `A103` → `A201`).
+
+Oppdaterer:
+- Filnavn (`A103_Beskrivelse.kt` → `A201_Beskrivelse.kt`)
+- Klassenavn (entity og processor)
+- Alle referanser i filer i samme mappe
+
+Diskriminatorverdien endres **ikke**. En checkbox lar deg velge å renummerere etterfølgende aktiviteter automatisk.
+
+### Legg til getInputParametere (Alt+Enter i en Behandling-fil)
+
+**Alt+Enter** → *"Legg til getInputParametere()"* genererer en `getInputParametere()`-override basert på eksisterende input-properties i klassen. Dette gjør at input-parametrene vises i Verdande.
 
 ### Legg til input/output-parameter (Alt+Enter)
 
@@ -108,8 +124,10 @@ Plugin-filen havner i `build/distributions/`.
 ## Bruk
 
 1. **Ny behandling**: Høyreklikk på en mappe → **New → PEN Behandling** → fyll inn skjemaet
-2. **Ny aktivitet**: Åpne en behandlings- eller aktivitetsfil → **Alt+Enter** → *"Add new Aktivitet to this Behandling"*
-3. **Gi nytt navn**: Åpne en aktivitetsfil → **Alt+Enter** → *"Rename Aktivitet (PEN conventions)"*
-4. **Legg til input/output**: Åpne en behandlings- eller aktivitetsfil → **Alt+Enter** → *"Legg til input-parameter"* / *"Legg til output-parameter"*
-5. **Legg til getRequestContextUserId**: Åpne en behandlingsfil → **Alt+Enter** → *"Legg til getRequestContextUserId()"*
-6. **Inspeksjoner**: Aktiveres automatisk i alle Kotlin-filer med Behandling/Aktivitet/Processor-klasser
+2. **Ny aktivitet**: Åpne en behandlings- eller aktivitetsfil → **Alt+Enter** → *"Legg til ny aktivitet i denne behandlingen"*
+3. **Gi nytt navn**: Åpne en aktivitetsfil → **Alt+Enter** → *"Gi nytt navn til aktivitet (PEN-konvensjoner)"*
+4. **Endre aktivitetsnummer**: Åpne en aktivitetsfil → **Alt+Enter** → *"Endre aktivitetsnummer"*
+5. **Legg til input/output**: Åpne en behandlings- eller aktivitetsfil → **Alt+Enter** → *"Legg til input-parameter"* / *"Legg til output-parameter"*
+6. **Legg til getInputParametere**: Åpne en behandlingsfil med input-parametere → **Alt+Enter** → *"Legg til getInputParametere()"*
+7. **Legg til getRequestContextUserId**: Åpne en behandlingsfil → **Alt+Enter** → *"Legg til getRequestContextUserId()"*
+8. **Inspeksjoner**: Aktiveres automatisk i alle Kotlin-filer med Behandling/Aktivitet/Processor-klasser

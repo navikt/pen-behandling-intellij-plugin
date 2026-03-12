@@ -20,6 +20,7 @@ class AddParameterDialog(
     init {
         title = dialogTitle
         init()
+        initValidation()
     }
 
     override fun createCenterPanel(): JComponent = panel {
