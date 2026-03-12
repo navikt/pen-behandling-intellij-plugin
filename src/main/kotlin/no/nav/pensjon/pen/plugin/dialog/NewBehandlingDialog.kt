@@ -20,7 +20,7 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
     private val requestContextUserIdField = JBTextField()
     private val aktivitetDescriptionField = JBTextField()
     private val integrationTestCheckbox = JCheckBox("Opprett integrasjonstest", false)
-    private val getInputParametereCheckbox = JCheckBox("Generer getInputParametere()", true)
+    private val getInputParametereCheckbox = JCheckBox("Generer getInputParametere()", false)
 
     private var selectedTeam = TEAMS[0]
     private var selectedPriority = PRIORITIES[0]
