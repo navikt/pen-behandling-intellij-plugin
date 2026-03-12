@@ -12,6 +12,8 @@ import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
 import javax.swing.*
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
 class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
 
@@ -41,12 +43,31 @@ class NewBehandlingDialog(project: Project) : DialogWrapper(project) {
         title = "Ny Behandling"
         setSize(550, 550)
         init()
+        initValidation()
 
-        nameField.document.addDocumentListener(object : javax.swing.event.DocumentListener {
-            override fun insertUpdate(e: javax.swing.event.DocumentEvent) = syncDiscriminator()
-            override fun removeUpdate(e: javax.swing.event.DocumentEvent) = syncDiscriminator()
-            override fun changedUpdate(e: javax.swing.event.DocumentEvent) = syncDiscriminator()
-        })
+        val revalidate = object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent) {
+                syncDiscriminator()
+                initValidation()
+            }
+            override fun removeUpdate(e: DocumentEvent) {
+                syncDiscriminator()
+                initValidation()
+            }
+            override fun changedUpdate(e: DocumentEvent) {
+                syncDiscriminator()
+                initValidation()
+            }
+        }
+        nameField.document.addDocumentListener(revalidate)
+
+        val revalidateOnly = object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent) = initValidation()
+            override fun removeUpdate(e: DocumentEvent) = initValidation()
+            override fun changedUpdate(e: DocumentEvent) = initValidation()
+        }
+        discriminatorField.document.addDocumentListener(revalidateOnly)
+        aktivitetDescriptionField.document.addDocumentListener(revalidateOnly)
     }
 
     private fun syncDiscriminator() {

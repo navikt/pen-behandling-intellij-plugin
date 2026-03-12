@@ -8,6 +8,8 @@ import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
 class AddParameterDialog(
     project: Project,
@@ -21,6 +23,7 @@ class AddParameterDialog(
         title = dialogTitle
         init()
         initValidation()
+        addValidationListeners(nameField, typeField)
     }
 
     override fun createCenterPanel(): JComponent = panel {
@@ -50,4 +53,13 @@ class AddParameterDialog(
 
     val paramName: String get() = nameField.text.trim()
     val paramType: String get() = typeField.text.trim()
+
+    private fun addValidationListeners(vararg fields: JBTextField) {
+        val listener = object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent) = initValidation()
+            override fun removeUpdate(e: DocumentEvent) = initValidation()
+            override fun changedUpdate(e: DocumentEvent) = initValidation()
+        }
+        fields.forEach { it.document.addDocumentListener(listener) }
+    }
 }

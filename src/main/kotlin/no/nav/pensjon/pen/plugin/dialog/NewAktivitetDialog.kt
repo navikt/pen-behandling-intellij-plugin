@@ -14,6 +14,8 @@ import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
 import javax.swing.*
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
 class NewAktivitetDialog(
     project: Project,
@@ -42,6 +44,13 @@ class NewAktivitetDialog(
         setSize(550, 500)
         init()
         initValidation()
+        val revalidate = object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent) = initValidation()
+            override fun removeUpdate(e: DocumentEvent) = initValidation()
+            override fun changedUpdate(e: DocumentEvent) = initValidation()
+        }
+        aktivitetNumberField.document.addDocumentListener(revalidate)
+        aktivitetDescriptionField.document.addDocumentListener(revalidate)
     }
 
     override fun createCenterPanel(): JComponent {

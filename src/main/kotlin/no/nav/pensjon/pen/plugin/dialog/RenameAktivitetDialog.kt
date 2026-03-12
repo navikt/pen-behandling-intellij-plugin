@@ -9,6 +9,8 @@ import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import javax.swing.JCheckBox
 import javax.swing.JComponent
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
 class RenameAktivitetDialog(
     project: Project,
@@ -23,6 +25,11 @@ class RenameAktivitetDialog(
         title = "Gi nytt navn til aktivitet $numStr"
         init()
         initValidation()
+        descriptionField.document.addDocumentListener(object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent) = initValidation()
+            override fun removeUpdate(e: DocumentEvent) = initValidation()
+            override fun changedUpdate(e: DocumentEvent) = initValidation()
+        })
     }
 
     override fun createCenterPanel(): JComponent = panel {
