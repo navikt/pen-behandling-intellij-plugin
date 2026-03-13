@@ -6,14 +6,12 @@ IntelliJ-plugin som gjør det enklere å opprette nye behandlinger og aktivitete
 
 ## Hvordan ta i bruk
 
-### Automatiske oppdateringer (anbefalt)
-
 1. I IntelliJ: **Settings → Plugins → ⚙️ → Manage Plugin Repositories...**
 2. Legg til URL: `https://navikt.github.io/pen-behandling-intellij-plugin/updatePlugins.xml`
 3. Søk etter **PEN Behandling Toolkit** i Plugins-fanen og installer
 4. IntelliJ vil automatisk varsle om nye versjoner
 
-### Manuell installasjon
+### Man kan også laste ned plugin manuelt
 
 1. Last ned siste versjon av plugin-ZIP fra [Releases](https://github.com/navikt/pen-behandling-intellij-plugin/releases)
 2. I IntelliJ: **Settings → Plugins → ⚙️ → Install Plugin from Disk...**
